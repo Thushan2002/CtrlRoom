@@ -28,3 +28,21 @@
     --color-border-1: #a6c8ff;
     --color-border-2: #0f62fe;
 }
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-20px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+.floating-element {
+    animation: float 3s ease-in-out infinite;
+}
