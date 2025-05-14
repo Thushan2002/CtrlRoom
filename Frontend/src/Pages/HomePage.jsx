@@ -4,10 +4,13 @@ import {
   faShieldAlt,
   faChartLine,
   faChevronRight,
+  faMobileAlt,
   faAngleDown,
 } from "@fortawesome/free-solid-svg-icons";
 
+// Placeholder images (replace with your actual image imports)
 import heroImage from "../assets/images/hero-image.png";
+import teamImage from "../assets/images/team-work.png";
 
 const HomePage = () => {
   return (
@@ -65,6 +68,69 @@ const HomePage = () => {
           <a href="#about" className="text-text-1">
             <FontAwesomeIcon icon={faAngleDown}></FontAwesomeIcon>
           </a>
+        </div>
+      </section>
+
+      {/* About Us Section */}
+      <section
+        id="about"
+        className="py-10 md:py-20 mx-3 md:mx-5 rounded-2xl shadow-2xl px-8 md:px-20 bg-background-dark text-text-3">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              <span className="text-primary-4">About</span> Our Platform
+            </h2>
+            <p className="text-lg mb-6 leading-relaxed">
+              CtrlRoom is an all-in-one platform designed to simplify complaint
+              management, dashboard monitoring, and real-time alerts. We help
+              organizations streamline their internal control processes through
+              intuitive and modern tools.
+            </p>
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-start">
+                <FontAwesomeIcon
+                  icon={faShieldAlt}
+                  className="text-primary-4 mt-1 mr-3"
+                />
+                <span>Military-grade security for your sensitive data</span>
+              </li>
+              <li className="flex items-start">
+                <FontAwesomeIcon
+                  icon={faChartLine}
+                  className="text-primary-4 mt-1 mr-3"
+                />
+                <span>Real-time analytics and reporting</span>
+              </li>
+              <li className="flex items-start">
+                <FontAwesomeIcon
+                  icon={faMobileAlt}
+                  className="text-primary-4 mt-1 mr-3"
+                />
+                <span>Fully responsive on all devices</span>
+              </li>
+            </ul>
+            <button className="px-6 py-3 bg-primary-1 text-text-3 rounded-lg hover:bg-primary-3 transition-all">
+              Learn More
+            </button>
+          </div>
+          <div className="relative">
+            <div className="relative rounded-xl overflow-hidden shadow-2xl">
+              <img
+                src={teamImage}
+                alt="Team working together"
+                className="w-full h-auto"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background-dark to-transparent opacity-80"></div>
+            </div>
+            <div className="absolute -bottom-8 -right-8 bg-primary-3 p-3 md:p-6 rounded-xl shadow-lg w-full md:w-3/4">
+              <h4 className="font-bold text-sm md:text-lg mb-2">
+                24/7 Support
+              </h4>
+              <p className="text-xs md:text-sm">
+                Our team is always ready to assist you with any questions.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
     </div>
