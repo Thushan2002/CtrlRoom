@@ -16,7 +16,7 @@ const HomePage = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center px-4 md:px-8 bg-background-2  overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center px-4 md:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center z-10">
           {/* Left side */}
           <div className="text-center md:text-left animate-fade-in">
@@ -55,7 +55,7 @@ const HomePage = () => {
           </div>
 
           {/* Right side */}
-          <div className="hidden md:block animate-float floating-element drop-shadow-lg">
+          <div className=" animate-float floating-element drop-shadow-lg">
             <img
               src={heroImage}
               alt="Dashboard interface"
@@ -74,8 +74,8 @@ const HomePage = () => {
       {/* About Us Section */}
       <section
         id="about"
-        className="py-10 md:py-20 mx-3 md:mx-5 rounded-2xl shadow-2xl px-8 md:px-20 bg-background-dark text-text-3">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        className="py-10 md:py-20 rounded-2xl shadow-2xl px-5 md:px-20 bg-background-dark text-text-3">
+        <div className="mx-auto grid md:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
               <span className="text-primary-4">About</span> Our Platform
@@ -122,7 +122,7 @@ const HomePage = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background-dark to-transparent opacity-80"></div>
             </div>
-            <div className="absolute -bottom-8 -right-8 bg-primary-3 p-3 md:p-6 rounded-xl shadow-lg w-full md:w-3/4">
+            <div className="absolute -bottom-8 -right-2 bg-primary-3 p-3 md:p-6 rounded-xl shadow-lg w-full md:w-3/4">
               <h4 className="font-bold text-sm md:text-lg mb-2">
                 24/7 Support
               </h4>
