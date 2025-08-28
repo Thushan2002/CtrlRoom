@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -72,17 +73,21 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        // Token logic here (if using Sanctum or Passport)
+        // Create Sanctum token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
         return response()->json([
             'message' => 'Login successful',
-            'user' => $user
+            'user' => $user,
+            'role' => $user->role,
+            'token' => $token,
         ]);
     }
     public function logout(Request $request)
     {
-    
-    $request->user()->currentAccessToken()->delete();
-
+    if ($request->user() && $request->user()->currentAccessToken()) {
+        $request->user()->currentAccessToken()->delete();
+    }
     return response()->json(['message' => 'Logged out successfully'], 200);
     }
 }

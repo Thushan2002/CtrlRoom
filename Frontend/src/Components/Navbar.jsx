@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -9,11 +9,45 @@ import {
   faTachometerAlt,
   faBug,
   faSignOutAlt,
+  faSignInAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/images/logo.png";
+import API from "../services/api";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      setIsAuthenticated(false);
+      setRole(null);
+      return;
+    }
+    API.get("/user")
+      .then((res) => {
+        setIsAuthenticated(true);
+        setRole(res.data.role || (res.data.user && res.data.user.role) || null);
+      })
+      .catch(() => {
+        setIsAuthenticated(false);
+        setRole(null);
+      });
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await API.post("/logout");
+    } catch (_) {
+      // ignore errors
+    } finally {
+      localStorage.removeItem("auth_token");
+      setIsAuthenticated(false);
+      setRole(null);
+    }
+  };
 
   return (
     <nav className="bg-background-2 inset-shadow-sm/80 rounded-2xl">
@@ -49,19 +83,37 @@ const Navbar = () => {
           <CustomNavLink to="/" icon={faHome}>
             Home
           </CustomNavLink>
-          <CustomNavLink to="/dashboard" icon={faTachometerAlt}>
-            Dashboard
-          </CustomNavLink>
-          <CustomNavLink to="/complaints" icon={faBug}>
-            Complaints
-          </CustomNavLink>
-          <button className="flex items-center py-2 px-3 rounded-md hover:bg-hover-1 text-text-2 hover:text-primary-4 transition-colors group">
-            <FontAwesomeIcon
-              icon={faSignOutAlt}
-              className="mr-2 group-hover:text-primary-3"
-            />
-            <span className="group-hover:text-primary-3">Logout</span>
-          </button>
+          {role === "admin" && (
+            <CustomNavLink to="/dashboard" icon={faTachometerAlt}>
+              Dashboard
+            </CustomNavLink>
+          )}
+          {role !== "admin" && (
+            <CustomNavLink to="/complaints" icon={faBug}>
+              Complaints
+            </CustomNavLink>
+          )}
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="flex items-center py-2 px-3 rounded-md hover:bg-hover-1 text-text-2 hover:text-primary-4 transition-colors group">
+              <FontAwesomeIcon
+                icon={faSignOutAlt}
+                className="mr-2 group-hover:text-primary-3"
+              />
+              <span className="group-hover:text-primary-3">Logout</span>
+            </button>
+          ) : (
+            <NavLink
+              to="/login"
+              className="flex items-center py-2 px-3 rounded-md hover:bg-hover-1 text-text-2 hover:text-primary-4 transition-colors group">
+              <FontAwesomeIcon
+                icon={faSignInAlt}
+                className="mr-2 group-hover:text-primary-3"
+              />
+              <span className="group-hover:text-primary-3">Login</span>
+            </NavLink>
+          )}
         </div>
       </div>
     </nav>
