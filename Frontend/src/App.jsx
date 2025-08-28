@@ -2,7 +2,7 @@ import React from "react";
 import Navbar from "./Components/Navbar";
 import HomePage from "./Pages/HomePage";
 import Footer from "./Components/Footer";
-import SignUp from "./Pages/Signup";
+import SignUp from "./Pages/SignUp";
 import Login from "./Pages/Login";
 import { Route, Routes, useLocation } from "react-router-dom";
 
