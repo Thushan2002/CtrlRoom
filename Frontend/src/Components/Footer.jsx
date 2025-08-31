@@ -8,21 +8,24 @@ import {
   faTachometerAlt,
   faBug,
   faSignInAlt,
+  faSignOutAlt,
   faArrowUp,
   faEnvelope,
   faPhone,
   faMapMarkerAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const Footer = () => {
+  const { user, role, token, logout } = useAuth();
+  const isAuthenticated = Boolean(token || user);
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   };
-
-  console.log("redende");
 
   return (
     <footer className="bg-gradient-to-r from-blue-900 to-blue-800 text-white mt-16">
@@ -69,24 +72,49 @@ const Footer = () => {
               />
               Dashboard
             </Link>
-            <Link
-              to="/complaints"
-              className="hover:text-blue-300 transition-colors duration-200 flex items-center">
-              <FontAwesomeIcon
-                icon={faBug}
-                className="mt-1 mr-3 text-blue-300"
-              />
-              Complaints
-            </Link>
-            <Link
-              to="/login"
-              className="hover:text-blue-300 transition-colors duration-200 flex items-center">
-              <FontAwesomeIcon
-                icon={faSignInAlt}
-                className="mt-1 mr-3 text-blue-300"
-              />
-              Login
-            </Link>
+            {role === "admin" && (
+              <Link
+                to="/complaints"
+                className="hover:text-blue-300 transition-colors duration-200 flex items-center">
+                <FontAwesomeIcon
+                  icon={faBug}
+                  className="mt-1 mr-3 text-blue-300"
+                />
+                Complaints
+              </Link>
+            )}
+            {role !== "admin" && isAuthenticated && (
+              <Link
+                to="/profile"
+                className="hover:text-blue-300 transition-colors duration-200 flex items-center">
+                <FontAwesomeIcon
+                  icon={faUser}
+                  className="mt-1 mr-3 text-blue-300"
+                />
+                Profile
+              </Link>
+            )}
+            {!isAuthenticated ? (
+              <Link
+                to="/login"
+                className="hover:text-blue-300 transition-colors duration-200 flex items-center">
+                <FontAwesomeIcon
+                  icon={faSignInAlt}
+                  className="mt-1 mr-3 text-blue-300"
+                />
+                Login
+              </Link>
+            ) : (
+              <button
+                onClick={logout}
+                className="hover:text-blue-300 transition-colors duration-200 flex items-center">
+                <FontAwesomeIcon
+                  icon={faSignOutAlt}
+                  className="mt-1 mr-3 text-blue-300"
+                />
+                Logout
+              </button>
+            )}
           </nav>
         </div>
 

@@ -1,5 +1,5 @@
 // src/components/Navbar.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -10,43 +10,18 @@ import {
   faBug,
   faSignOutAlt,
   faSignInAlt,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/images/logo.png";
-import API from "../services/api";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) {
-      setIsAuthenticated(false);
-      setRole(null);
-      return;
-    }
-    API.get("/user")
-      .then((res) => {
-        setIsAuthenticated(true);
-        setRole(res.data.role || (res.data.user && res.data.user.role) || null);
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-        setRole(null);
-      });
-  }, []);
+  const { user, role, token, logout } = useAuth();
+  const isAuthenticated = Boolean(token || user);
 
   const handleLogout = async () => {
-    try {
-      await API.post("/logout");
-    } catch (_) {
-      // ignore errors
-    } finally {
-      localStorage.removeItem("auth_token");
-      setIsAuthenticated(false);
-      setRole(null);
-    }
+    await logout();
   };
 
   return (
@@ -83,20 +58,25 @@ const Navbar = () => {
           <CustomNavLink to="/" icon={faHome}>
             Home
           </CustomNavLink>
+
+          <CustomNavLink to="/dashboard" icon={faTachometerAlt}>
+            Dashboard
+          </CustomNavLink>
+
           {role === "admin" && (
-            <CustomNavLink to="/dashboard" icon={faTachometerAlt}>
-              Dashboard
-            </CustomNavLink>
-          )}
-          {role !== "admin" && (
             <CustomNavLink to="/complaints" icon={faBug}>
               Complaints
+            </CustomNavLink>
+          )}
+          {role !== "admin" && isAuthenticated && (
+            <CustomNavLink to="/profile" icon={faUser}>
+              Profile
             </CustomNavLink>
           )}
           {isAuthenticated ? (
             <button
               onClick={handleLogout}
-              className="flex items-center py-2 px-3 rounded-md hover:bg-hover-1 text-text-2 hover:text-primary-4 transition-colors group">
+              className="flex items-center py-2 px-3 rounded-md cursor-pointer hover:bg-hover-1 text-text-2 hover:text-primary-4 transition-colors group">
               <FontAwesomeIcon
                 icon={faSignOutAlt}
                 className="mr-2 group-hover:text-primary-3"
