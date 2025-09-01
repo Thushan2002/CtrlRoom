@@ -1,6 +1,7 @@
 import React from "react";
 import Navbar from "./Components/Navbar";
 import HomePage from "./Pages/HomePage";
+import Dashboard from "./Pages/Dashboard";
 import Footer from "./Components/Footer";
 import SignUp from "./Pages/SignUp";
 import Login from "./Pages/Login";
@@ -22,6 +23,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </div>
       <Footer />
