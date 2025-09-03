@@ -6,7 +6,7 @@ import Computers from "./Computers";
 
 const computers = Array.from({ length: 36 }, (_, i) => {
   const num = (i + 1).toString().padStart(3, "0");
-  const id = PC-${num};
+  const id = `PC-${num}`;
   const status = i % 9 === 0 ? "Unavailable" : "Available";
   return { id, status };
 });
@@ -69,4 +69,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard;
