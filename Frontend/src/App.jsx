@@ -6,6 +6,7 @@ import Footer from "./Components/Footer";
 import SignUp from "./Pages/SignUp";
 import Login from "./Pages/Login";
 import { Route, Routes, useLocation } from "react-router-dom";
+import Profile from "./Pages/Profile";
 
 const App = () => {
   const location = useLocation();
@@ -24,6 +25,7 @@ const App = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>
       <Footer />

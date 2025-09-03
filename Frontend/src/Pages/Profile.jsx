@@ -57,7 +57,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="pb-10 max-w-4xl mx-auto">
+    <div className="py-10 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">
           Profile

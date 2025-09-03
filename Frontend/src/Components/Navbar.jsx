@@ -58,10 +58,11 @@ const Navbar = () => {
           <CustomNavLink to="/" icon={faHome}>
             Home
           </CustomNavLink>
-
-          <CustomNavLink to="/dashboard" icon={faTachometerAlt}>
-            Dashboard
-          </CustomNavLink>
+          {user && (
+            <CustomNavLink to="/dashboard" icon={faTachometerAlt}>
+              Dashboard
+            </CustomNavLink>
+          )}
 
           {role === "admin" && (
             <CustomNavLink to="/complaints" icon={faBug}>

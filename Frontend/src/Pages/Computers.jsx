@@ -3,7 +3,7 @@ import PcComponent from "../Components/pcComponent";
 
 const computers = Array.from({ length: 48 }, (_, i) => {
   const num = (i + 1).toString().padStart(3, "0");
-  const id = 'PC-${num}';
+  const id = `PC-${num}`;
   const status = (i + 3) % 10 === 0 ? "Unavailable" : "Available";
   return { id, status };
 });
@@ -23,4 +23,4 @@ const Computers = () => {
   );
 };
 
-export default Computers;
+export default Computers;
