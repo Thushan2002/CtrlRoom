@@ -9,11 +9,18 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import Profile from "./Pages/Profile";
 import Computer from "./Pages/Computer";
 
+// Admin imports
+import AdminLayout from "./Components/Admin/AdminLayout";
+import AdminDashboard from "./Pages/Admin/AdminDashboard";
+import { AdminRoute } from "./utils/roleGuards.jsx";
+
 const App = () => {
   const location = useLocation();
 
   const hideNavbarPaths = ["/login"];
-  const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
+  const hideNavbarForAdmin = location.pathname.startsWith("/admin");
+  const shouldShowNavbar =
+    !hideNavbarPaths.includes(location.pathname) && !hideNavbarForAdmin;
 
   return (
     <div className="bg-background-2">
@@ -28,6 +35,18 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/computer/:pcId" element={<Computer />} />
           <Route path="/profile" element={<Profile />} />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminDashboard />
+                </AdminLayout>
+              </AdminRoute>
+            }
+          />
         </Routes>
       </div>
       <Footer />

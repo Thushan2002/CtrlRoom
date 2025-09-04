@@ -65,9 +65,14 @@ const Navbar = () => {
           )}
 
           {role === "admin" && (
-            <CustomNavLink to="/complaints" icon={faBug}>
-              Complaints
-            </CustomNavLink>
+            <>
+              <CustomNavLink to="/admin" icon={faTachometerAlt}>
+                Admin Dashboard
+              </CustomNavLink>
+              <CustomNavLink to="/complaints" icon={faBug}>
+                Complaints
+              </CustomNavLink>
+            </>
           )}
           {role !== "admin" && isAuthenticated && (
             <CustomNavLink to="/profile" icon={faUser}>
