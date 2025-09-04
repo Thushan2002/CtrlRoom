@@ -97,6 +97,25 @@ export const AppProvider = ({ children }) => {
     saveAuth(null, null, null);
   }, [saveAuth]);
 
+  // fetch computers
+  const [computers, setComputers] = useState([]);
+
+  const fetchComputers = async () => {
+    try {
+      const { data } = await API.get("/computers");
+      if (data.success) {
+        setComputers(data.data.data);
+        console.log("computers", data.data.data);
+      }
+    } catch (error) {
+      console.log("Error", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchComputers();
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -108,6 +127,9 @@ export const AppProvider = ({ children }) => {
       signupAdmin,
       logout,
       fetchCurrentUser,
+      API,
+      navigate,
+      computers,
     }),
     [
       user,
@@ -119,6 +141,9 @@ export const AppProvider = ({ children }) => {
       signupAdmin,
       logout,
       fetchCurrentUser,
+      API,
+      navigate,
+      computers,
     ]
   );
 

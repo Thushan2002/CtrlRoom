@@ -8,18 +8,17 @@ const statusStyles = {
   Unavailable: "bg-red-600 text-white border border-2  border-white",
 };
 
-const PcComponent = ({ id, status = "Available", onClick }) => {
-  const badgeClass = statusStyles[status] || statusStyles.Available;
+const PcComponent = ({ pc }) => {
+  const badgeClass = statusStyles[pc.system_status] || statusStyles.Available;
 
   return (
     <button
       type="button"
-      onClick={onClick}
       className="w-full text-left"
-      aria-label={`Computer ${id} ${status}`}>
-      <div className="p-4 bg-white flex flex-col items-center cursor-pointer rounded-xl shadow-sm hover:shadow-md transition-shadow duration-150">
+      aria-label={`Computer ${pc.id} ${pc.system_status}`}>
+      <div className="p-4 bg-white hover:bg-gray-100 flex flex-col items-center cursor-pointer rounded-xl shadow-sm hover:shadow-md transition-shadow duration-150">
         <span className="text-sm font-medium text-center text-slate-700">
-          {id}
+          {pc.id}
         </span>
         <div className="mt-3 flex items-center justify-between relative">
           <img
@@ -30,7 +29,7 @@ const PcComponent = ({ id, status = "Available", onClick }) => {
           />
           <span
             className={`text-xs w-6 h-6 flex items-center justify-center rounded-full absolute bottom-[-7px] right-[-8px] ${badgeClass}`}>
-            {status === "Available" ? (
+            {pc.system_status === "available" ? (
               <FontAwesomeIcon icon={faCheck} />
             ) : (
               <FontAwesomeIcon icon={faXmark} />

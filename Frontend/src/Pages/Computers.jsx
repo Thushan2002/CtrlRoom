@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import PcComponent from "../Components/pcComponent";
+import { useApp } from "../context/AppContext";
 
 // const computers = Array.from({ length: 48 }, (_, i) => {
 //   const num = (i + 1).toString().padStart(3, "0");
@@ -9,12 +10,7 @@ import PcComponent from "../Components/pcComponent";
 // });
 
 const Computers = () => {
-  const [computers, setComputers] = useState([]);
-
-  const fetchComputers = async () => {
-    try {
-    } catch (error) {}
-  };
+  const { computers, navigate } = useApp();
   return (
     <div className="pb-10">
       <h1 className="text-2xl md:text-3xl font-semibold text-slate-800 mb-6">
@@ -22,7 +18,14 @@ const Computers = () => {
       </h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {computers.map((pc) => (
-          <PcComponent key={pc.id} id={pc.id} status={pc.status} />
+          <div
+            key={pc.id}
+            onClick={() => {
+              navigate(`/computer/${pc.id}`);
+            }}
+            className="hover:scale-105">
+            <PcComponent key={pc.id} pc={pc} />
+          </div>
         ))}
       </div>
     </div>
