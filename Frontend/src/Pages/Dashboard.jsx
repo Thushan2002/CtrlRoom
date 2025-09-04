@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import PcComponent from "../Components/pcComponent";
-import { useAuth } from "../context/AuthContext";
+import { useApp } from "../context/AppContext";
 import Profile from "./Profile";
 import Computers from "./Computers";
 
@@ -13,7 +13,7 @@ const computers = Array.from({ length: 36 }, (_, i) => {
 
 const Dashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
-  const { user, role, logout } = useAuth();
+  const { user, role, logout } = useApp();
 
   const handleLogout = async () => {
     await logout();

@@ -9,9 +9,9 @@ import React, {
 import API from "../services/api";
 import { useNavigate } from "react-router-dom";
 
-const AuthContext = createContext(null);
+const AppContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [token, setToken] = useState(
@@ -122,11 +122,11 @@ export const AuthProvider = ({ children }) => {
     ]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+export const useApp = () => {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error("useApp must be used within an AppProvider");
   return ctx;
 };

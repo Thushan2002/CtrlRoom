@@ -1,11 +1,11 @@
 import Logo from "../assets/images/logo.png";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useApp } from "../context/AppContext.jsx";
 
 function Login() {
   const navigate = useNavigate();
-  const { login, user, loading } = useAuth();
+  const { login, user, loading } = useApp();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);

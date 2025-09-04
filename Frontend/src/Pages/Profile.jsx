@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useApp } from "../context/AppContext";
 
 const Profile = () => {
-  const { user, role } = useAuth();
+  const { user, role } = useApp();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",

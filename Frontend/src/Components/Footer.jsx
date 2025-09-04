@@ -15,10 +15,10 @@ import {
   faMapMarkerAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useApp } from "../context/AppContext.jsx";
 
 const Footer = () => {
-  const { user, role, token, logout } = useAuth();
+  const { user, role, token, logout } = useApp();
   const isAuthenticated = Boolean(token || user);
   const scrollToTop = () => {
     window.scrollTo({

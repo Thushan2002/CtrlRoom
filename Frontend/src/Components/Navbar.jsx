@@ -13,11 +13,11 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/images/logo.png";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useApp } from "../context/AppContext.jsx";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, role, token, logout } = useAuth();
+  const { user, role, token, logout } = useApp();
   const isAuthenticated = Boolean(token || user);
 
   const handleLogout = async () => {
