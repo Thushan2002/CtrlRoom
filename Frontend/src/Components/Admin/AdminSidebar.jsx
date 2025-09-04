@@ -70,7 +70,7 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <aside className="fixed left-0 top-16 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-40">
+    <aside className="h-full  w-64 bg-white shadow-lg border-r border-gray-200 z-40 rounded-xl">
       <nav className="p-4">
         <ul className="space-y-2">
           {menuItems.map((item) => {
@@ -84,12 +84,11 @@ const AdminSidebar = () => {
                     flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200
                     ${
                       isActive
-                        ? "bg-blue-600 text-white shadow-md"
+                        ? "bg-blue-400 text-white shadow-md"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }
                   `}
-                  title={item.description}
-                >
+                  title={item.description}>
                   <FontAwesomeIcon
                     icon={item.icon}
                     className={`h-5 w-5 ${
@@ -110,14 +109,6 @@ const AdminSidebar = () => {
           })}
         </ul>
       </nav>
-
-      {/* Sidebar Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-        <div className="text-xs text-gray-500 text-center">
-          <p>CtrlRoom Admin Panel</p>
-          <p>Version 1.0.0</p>
-        </div>
-      </div>
     </aside>
   );
 };

@@ -1,14 +1,14 @@
-import React from 'react';
-import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import React from "react";
+import { useApp } from "../context/AppContext";
+import { Navigate } from "react-router-dom";
 
 /**
  * AdminRoute - Protects admin-only routes
  * Redirects non-admin users to their appropriate dashboard
  */
 export const AdminRoute = ({ children }) => {
-  const { role, loading } = useAuth();
-  
+  const { role, loading } = useApp();
+
   // Show loading while checking authentication
   if (loading) {
     return (
@@ -17,12 +17,12 @@ export const AdminRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   // Redirect non-admin users
-  if (role !== 'admin') {
+  if (role !== "admin") {
     return <Navigate to="/dashboard" replace />;
   }
-  
+
   return children;
 };
 
@@ -31,8 +31,8 @@ export const AdminRoute = ({ children }) => {
  * Redirects admin users to admin dashboard
  */
 export const StudentRoute = ({ children }) => {
-  const { role, loading } = useAuth();
-  
+  const { role, loading } = useApp();
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -40,11 +40,11 @@ export const StudentRoute = ({ children }) => {
       </div>
     );
   }
-  
-  if (role === 'admin') {
+
+  if (role === "admin") {
     return <Navigate to="/admin" replace />;
   }
-  
+
   return children;
 };
 
@@ -53,8 +53,8 @@ export const StudentRoute = ({ children }) => {
  * Redirects unauthenticated users to login
  */
 export const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  
+  const { user, loading } = useApp();
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -62,10 +62,10 @@ export const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return children;
 };
