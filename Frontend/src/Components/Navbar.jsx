@@ -20,6 +20,8 @@ const Navbar = () => {
   const { user, role, token, logout } = useApp();
   const isAuthenticated = Boolean(token || user);
 
+  console.log("role", role);
+
   const handleLogout = async () => {
     await logout();
   };
@@ -58,7 +60,7 @@ const Navbar = () => {
           <CustomNavLink to="/" icon={faHome}>
             Home
           </CustomNavLink>
-          {user && (
+          {role === "student" && (
             <CustomNavLink to="/dashboard" icon={faTachometerAlt}>
               Dashboard
             </CustomNavLink>
@@ -68,9 +70,6 @@ const Navbar = () => {
             <>
               <CustomNavLink to="/admin" icon={faTachometerAlt}>
                 Admin Dashboard
-              </CustomNavLink>
-              <CustomNavLink to="/complaints" icon={faBug}>
-                Complaints
               </CustomNavLink>
             </>
           )}

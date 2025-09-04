@@ -56,33 +56,67 @@ class AuthController extends Controller
     }
 
     // Login (shared for both)
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+   public function login(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+    if ($validator->fails()) {
+        return response()->json($validator->errors(), 422);
+    }
+
+    if (
+        $request->email === env('ADMIN_EMAIL') &&
+        $request->password === env('ADMIN_PASSWORD')
+    ) {
+        // Create a fake user object for admin (not in DB)
+        $user = (object) [
+            'id' => 0,
+            'name' => 'Super Admin',
+            'email' => env('ADMIN_EMAIL'),
+            'role' => 'admin',
+        ];
+
+        // Issue token manually for ENV admin
+        $dbUser = User::where('email', env('ADMIN_EMAIL'))->first();
+        if (!$dbUser) {
+            // Optionally persist ENV admin in DB to use Sanctum
+            $dbUser = User::create([
+                'name' => 'Super Admin',
+                'email' => env('ADMIN_EMAIL'),
+                'password' => Hash::make(env('ADMIN_PASSWORD')),
+                'role' => 'admin',
+            ]);
         }
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-
-        // Create Sanctum token
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $dbUser->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Login successful',
+            'message' => 'Login successful (ENV Admin)',
             'user' => $user,
-            'role' => $user->role,
+            'role' => 'admin',
             'token' => $token,
         ]);
     }
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return response()->json(['message' => 'Invalid credentials'], 401);
+    }
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Login successful',
+        'user' => $user,
+        'role' => $user->role,
+        'token' => $token,
+    ]);
+}
+
     public function logout(Request $request)
     {
     if ($request->user() && $request->user()->currentAccessToken()) {

@@ -8,19 +8,13 @@ import AdminNavbar from "./AdminNavbar";
  */
 const AdminLayout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Admin Navbar */}
-      <AdminNavbar />
-
+    <div className="py-5">
       {/* Main Layout Container */}
       <div className="flex">
         {/* Admin Sidebar */}
         <AdminSidebar />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-6 ml-64">
-          <div className="max-w-7xl mx-auto">{children}</div>
-        </main>
       </div>
     </div>
   );
