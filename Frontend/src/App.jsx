@@ -10,9 +10,11 @@ import Profile from "./Pages/Profile";
 import Computer from "./Pages/Computer";
 
 // Admin imports
-import AdminLayout from "./Components/Admin/AdminLayout";
+
 import AdminDashboard from "./Pages/Admin/AdminDashboard";
 import { AdminRoute } from "./utils/roleGuards.jsx";
+import AdminComputers from "./Components/Admin/AdminComputers.jsx";
+import AdminOverview from "./Components/Admin/AdminOverview.jsx";
 
 const App = () => {
   return (
@@ -38,14 +40,9 @@ const App = () => {
             path="/admin/*"
             element={
               <AdminRoute>
-                <AdminLayout />
+                <AdminDashboard />
               </AdminRoute>
-            }>
-            <Route index element={<AdminDashboard />} />
-            {/* Example: add more admin pages here */}
-            {/* <Route path="users" element={<AdminUsers />} /> */}
-            {/* <Route path="settings" element={<AdminSettings />} /> */}
-          </Route>
+            }></Route>
         </Routes>
       </div>
 
