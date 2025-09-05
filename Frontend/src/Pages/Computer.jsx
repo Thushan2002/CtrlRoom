@@ -22,6 +22,7 @@ const Computer = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [showComplaintModal, setShowComplaintModal] = useState(false);
   const [complaintText, setComplaintText] = useState("");
+  const [complaintsArray, setComplaintsArray] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
 
@@ -30,6 +31,9 @@ const Computer = () => {
       const { data } = await API.get(`/computers/${pcId}`);
       if (data.success) {
         setComputer(data.data);
+        setComplaintsArray(
+          Array.isArray(data.data.complaints) ? data.data.complaints : []
+        );
       }
     } catch (error) {
       console.log("Error", error.message);
@@ -50,9 +54,10 @@ const Computer = () => {
     setSubmitStatus(null);
 
     try {
-      // This would be your actual API endpoint for submitting complaints
-      const { data } = await API.post(`/computers/${computer.id}/complaints`, {
-        complaint: complaintText,
+      // Append new complaint to the array
+      const updatedComplaints = [...complaintsArray, complaintText];
+      const { data } = await API.patch(`/computers/${computer.id}/complaints`, {
+        complaints: updatedComplaints,
       });
 
       if (data.success) {
@@ -61,6 +66,8 @@ const Computer = () => {
           message: "Complaint submitted successfully!",
         });
         setComplaintText("");
+        setComplaintsArray(updatedComplaints);
+        setComputer((prev) => ({ ...prev, complaints: updatedComplaints }));
         setTimeout(() => {
           setShowComplaintModal(false);
           setSubmitStatus(null);
@@ -209,12 +216,18 @@ const Computer = () => {
           </div>
 
           {/* Complaints section if exists */}
-          {computer.complaints && (
+          {computer.complaints && computer.complaints.length > 0 && (
             <div className="mt-4 p-3 bg-red-50 rounded-lg">
               <p className="text-xs font-medium text-red-800">
                 Complaints Reported
               </p>
-              <p className="text-sm text-red-700">{computer.complaints}</p>
+              <ul className="list-disc pl-5">
+                {computer.complaints.map((c, idx) => (
+                  <li key={idx} className="text-sm text-red-700">
+                    {c}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
