@@ -2,8 +2,9 @@ import React, { useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
 
 const Profile = () => {
-  const { user, role } = useApp();
+  const { user, role, fetchCurrentUser, logout, API } = useApp();
   const [isEditing, setIsEditing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -33,11 +34,43 @@ const Profile = () => {
     }
   };
 
-  const handleSave = () => {
-    // Here you would typically send the updated data to your backend
-    console.log("Saving data:", { ...formData, profileImage });
-    setIsEditing(false);
-    // Update user context if needed
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const payload = { ...formData };
+      if (profileImage && profileImage !== user?.profileImage) {
+        payload.profileImage = profileImage;
+      }
+      await API.put("/user/profile", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (fetchCurrentUser) await fetchCurrentUser();
+      setIsEditing(false);
+    } catch (err) {
+      alert("Failed to update profile.");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone."
+      )
+    )
+      return;
+    try {
+      const token = localStorage.getItem("auth_token");
+      await API.delete("/user/account", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (logout) logout();
+    } catch (err) {
+      alert("Failed to delete account.");
+    }
   };
 
   const handleCancel = () => {
@@ -62,26 +95,44 @@ const Profile = () => {
         <h1 className="text-2xl md:text-3xl font-semibold text-slate-800">
           Profile
         </h1>
-        {!isEditing ? (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Edit Profile
-          </button>
-        ) : (
-          <div className="flex gap-2">
+        <div className="flex gap-2">
+          {!isEditing ? (
             <button
-              onClick={handleCancel}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
+              onClick={() => setIsEditing(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              Save Changes
+              Edit Profile
             </button>
-          </div>
-        )}
+          ) : (
+            <>
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setSubmitting(true);
+                  try {
+                    await handleSave();
+                  } catch (err) {
+                    const msg = err?.response?.data?.message || "Update failed";
+                    alert(msg);
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+                disabled={submitting}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                {submitting ? "Updating..." : "Save Chnages"}
+              </button>
+            </>
+          )}
+          <button
+            onClick={handleDeleteAccount}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            Delete Account
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
