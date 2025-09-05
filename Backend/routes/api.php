@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 
 // user registration and login routes
@@ -15,7 +16,11 @@ Route::middleware('auth:sanctum')->group(function () {
             'role' => $user ? $user->role : null,
         ]);
     });
+
+    // User profile update and delete
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::delete('/user/account', [UserController::class, 'deleteAccount']);
 });
 
 // Computer management routes
-require __DIR__.'/computerRoutes.php';
+require _DIR_.'/computerRoutes.php';
