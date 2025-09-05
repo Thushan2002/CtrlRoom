@@ -23,4 +23,4 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Computer management routes
-require _DIR_.'/computerRoutes.php';
+require __DIR__.'/computerRoutes.php';
