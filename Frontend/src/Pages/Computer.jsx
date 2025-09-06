@@ -13,11 +13,13 @@ import {
   faExclamationTriangle,
   faTimes,
   faPaperPlane,
+  faSave,
 } from "@fortawesome/free-solid-svg-icons";
 
 const Computer = () => {
   const { pcId } = useParams();
   const [computer, setComputer] = useState({});
+  const [editedComputer, setEditedComputer] = useState({});
   const { API, role } = useApp();
   const [isHovered, setIsHovered] = useState(false);
   const [showComplaintModal, setShowComplaintModal] = useState(false);
@@ -25,12 +27,15 @@ const Computer = () => {
   const [complaintsArray, setComplaintsArray] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchComputer = async () => {
     try {
       const { data } = await API.get(`/computers/${pcId}`);
       if (data.success) {
         setComputer(data.data);
+        setEditedComputer(data.data);
         setComplaintsArray(
           Array.isArray(data.data.complaints) ? data.data.complaints : []
         );
@@ -83,6 +88,46 @@ const Computer = () => {
     }
   };
 
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    try {
+      const { data } = await API.put(
+        `/computers/${computer.id}`,
+        editedComputer
+      );
+
+      if (data.success) {
+        setComputer(data.data);
+        setIsEditing(false);
+        setSubmitStatus({
+          type: "success",
+          message: "Computer details updated successfully!",
+        });
+        setTimeout(() => setSubmitStatus(null), 2000);
+      }
+    } catch (error) {
+      setSubmitStatus({
+        type: "error",
+        message: "Failed to update computer details. Please try again.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedComputer(computer);
+    setIsEditing(false);
+    setSubmitStatus(null);
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedComputer((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   // Determine status color
   const getStatusColor = () => {
     switch (computer.system_status) {
@@ -101,6 +146,17 @@ const Computer = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
+      {submitStatus && !showComplaintModal && (
+        <div
+          className={`mb-4 p-3 rounded-lg text-center ${
+            submitStatus.type === "success"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}>
+          {submitStatus.message}
+        </div>
+      )}
+
       <div
         className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg"
         onMouseEnter={() => setIsHovered(true)}
@@ -127,24 +183,65 @@ const Computer = () => {
           {/* Asset tag and location */}
           <div className="mb-6">
             <div className="flex justify-between items-start mb-2">
-              <h2 className="text-xl font-bold text-gray-900">
-                {computer.asset_tag}
-              </h2>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedComputer.asset_tag || ""}
+                  onChange={(e) =>
+                    handleInputChange("asset_tag", e.target.value)
+                  }
+                  className="text-xl font-bold text-gray-900 border border-gray-300 rounded px-2 py-1"
+                />
+              ) : (
+                <h2 className="text-xl font-bold text-gray-900">
+                  {computer.asset_tag}
+                </h2>
+              )}
               {role === "admin" && (
-                <button
-                  className={`p-2 rounded-full transition-colors ${
-                    isHovered
-                      ? "bg-indigo-100 text-indigo-700"
-                      : "text-gray-400"
-                  }`}
-                  aria-label="Edit computer">
-                  <FontAwesomeIcon icon={faEdit} />
-                </button>
+                <div className="flex space-x-2">
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={handleSaveChanges}
+                        disabled={isSaving}
+                        className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 disabled:opacity-50">
+                        <FontAwesomeIcon icon={faSave} />
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="p-2 bg-gray-500 text-white rounded-full hover:bg-gray-600">
+                        <FontAwesomeIcon icon={faTimes} />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className={`p-2 rounded-full transition-colors ${
+                        isHovered
+                          ? "bg-indigo-100 text-indigo-700"
+                          : "text-gray-400"
+                      }`}
+                      aria-label="Edit computer">
+                      <FontAwesomeIcon icon={faEdit} />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center text-gray-600">
               <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2 text-sm" />
-              <span className="text-sm">{computer.location}</span>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedComputer.location || ""}
+                  onChange={(e) =>
+                    handleInputChange("location", e.target.value)
+                  }
+                  className="text-sm border border-gray-300 rounded px-2 py-1 w-full"
+                />
+              ) : (
+                <span className="text-sm">{computer.location}</span>
+              )}
             </div>
           </div>
 
@@ -155,9 +252,18 @@ const Computer = () => {
               <div className="bg-blue-100 p-2 rounded-lg mr-3">
                 <FontAwesomeIcon icon={faDisplay} className="text-blue-600" />
               </div>
-              <div>
+              <div className="w-full">
                 <p className="text-xs text-gray-500">Operating System</p>
-                <p className="text-sm font-medium">{computer.os}</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedComputer.os || ""}
+                    onChange={(e) => handleInputChange("os", e.target.value)}
+                    className="text-sm font-medium border border-gray-300 rounded px-2 py-1 w-full"
+                  />
+                ) : (
+                  <p className="text-sm font-medium">{computer.os}</p>
+                )}
               </div>
             </div>
 
@@ -169,9 +275,20 @@ const Computer = () => {
                   className="text-purple-600"
                 />
               </div>
-              <div>
+              <div className="w-full">
                 <p className="text-xs text-gray-500">Processor</p>
-                <p className="text-sm font-medium">{computer.processor}</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedComputer.processor || ""}
+                    onChange={(e) =>
+                      handleInputChange("processor", e.target.value)
+                    }
+                    className="text-sm font-medium border border-gray-300 rounded px-2 py-1 w-full"
+                  />
+                ) : (
+                  <p className="text-sm font-medium">{computer.processor}</p>
+                )}
               </div>
             </div>
 
@@ -180,9 +297,18 @@ const Computer = () => {
               <div className="bg-green-100 p-2 rounded-lg mr-3">
                 <FontAwesomeIcon icon={faMemory} className="text-green-600" />
               </div>
-              <div>
+              <div className="w-full">
                 <p className="text-xs text-gray-500">RAM</p>
-                <p className="text-sm font-medium">{computer.ram}</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedComputer.ram || ""}
+                    onChange={(e) => handleInputChange("ram", e.target.value)}
+                    className="text-sm font-medium border border-gray-300 rounded px-2 py-1 w-full"
+                  />
+                ) : (
+                  <p className="text-sm font-medium">{computer.ram}</p>
+                )}
               </div>
             </div>
 
@@ -194,9 +320,20 @@ const Computer = () => {
                   className="text-orange-600"
                 />
               </div>
-              <div>
+              <div className="w-full">
                 <p className="text-xs text-gray-500">Storage</p>
-                <p className="text-sm font-medium">{computer.storage}</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedComputer.storage || ""}
+                    onChange={(e) =>
+                      handleInputChange("storage", e.target.value)
+                    }
+                    className="text-sm font-medium border border-gray-300 rounded px-2 py-1 w-full"
+                  />
+                ) : (
+                  <p className="text-sm font-medium">{computer.storage}</p>
+                )}
               </div>
             </div>
           </div>
@@ -206,13 +343,55 @@ const Computer = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-gray-500">Graphics Card</p>
-                <p className="text-sm">{computer.graphics_card}</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedComputer.graphics_card || ""}
+                    onChange={(e) =>
+                      handleInputChange("graphics_card", e.target.value)
+                    }
+                    className="text-sm border border-gray-300 rounded px-2 py-1 w-full"
+                  />
+                ) : (
+                  <p className="text-sm">{computer.graphics_card}</p>
+                )}
               </div>
               <div>
                 <p className="text-xs text-gray-500">Motherboard</p>
-                <p className="text-sm">{computer.motherboard}</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedComputer.motherboard || ""}
+                    onChange={(e) =>
+                      handleInputChange("motherboard", e.target.value)
+                    }
+                    className="text-sm border border-gray-300 rounded px-2 py-1 w-full"
+                  />
+                ) : (
+                  <p className="text-sm">{computer.motherboard}</p>
+                )}
               </div>
             </div>
+
+            {/* Status field (admin only) */}
+            {role === "admin" && (
+              <div className="mt-4">
+                <p className="text-xs text-gray-500">System Status</p>
+                {isEditing ? (
+                  <select
+                    value={editedComputer.system_status || ""}
+                    onChange={(e) =>
+                      handleInputChange("system_status", e.target.value)
+                    }
+                    className="text-sm border border-gray-300 rounded px-2 py-1 w-full mt-1">
+                    <option value="available">Available</option>
+                    <option value="unavailable">Unvailable</option>
+                  </select>
+                ) : (
+                  <p className="text-sm">{computer.system_status}</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Complaints section if exists */}
