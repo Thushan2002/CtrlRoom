@@ -20,6 +20,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // User profile update and delete
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
     Route::delete('/user/account', [UserController::class, 'deleteAccount']);
+    Route::get('/users', [UserController::class, 'getAllUsers']);
+    Route::get('/users/{id}', [UserController::class, 'getUserById']);
 });
 
 // Computer management routes

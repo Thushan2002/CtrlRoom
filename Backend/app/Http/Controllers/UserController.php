@@ -32,4 +32,24 @@ class UserController extends Controller
         Auth::logout();
         return response()->json(['message' => 'Account deleted successfully']);
     }
+
+    // Fetch all users
+    public function getAllUsers()
+    {
+        $users = User::all();
+        return response()->json(['users' => $users]);
+    }
+
+
+    // Fetch user by id
+    public function getUserById($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        return response()->json(['user' => $user]);
+    }
 }
