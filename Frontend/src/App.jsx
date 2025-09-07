@@ -19,18 +19,13 @@ import AdminOverview from "./Components/Admin/AdminOverview.jsx";
 const App = () => {
   return (
     <div className="bg-background-2">
-      {/* Routes outside main container */}
-      <Routes>
-        <Route path="/login" element={<Login />} />
-      </Routes>
-
       <div className="w-[95%] sm:w-[90%] md:w-[90%] mx-auto pt-6 md:pt-10">
         <Navbar />
-
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/computer/:pcId" element={<Computer />} />
           <Route path="/profile" element={<Profile />} />
