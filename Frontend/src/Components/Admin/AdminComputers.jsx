@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PcComponent from "../pcComponent";
 import { useApp } from "../../context/AppContext";
 
@@ -7,6 +7,19 @@ const AdminComputers = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filteredComputers, setFilteredComputers] = useState(computers);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    system_status: "",
+    location: "",
+    search: "",
+    page: 1,
+    per_page: 15,
+  });
+
   const [formData, setFormData] = useState({
     system_status: "available",
     complaints: [],
@@ -19,6 +32,91 @@ const AdminComputers = () => {
     location: "",
     asset_tag: "",
   });
+
+  // Apply filters whenever filters state changes
+  useEffect(() => {
+    applyFilters();
+  }, [filters, computers]);
+
+  const applyFilters = async () => {
+    setIsLoading(true);
+
+    try {
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && value !== "") {
+          queryParams.append(key, value);
+        }
+      });
+
+      // Make API call with filters
+      const { data } = await API.get(`/computers?${queryParams.toString()}`);
+
+      if (data.success) {
+        setFilteredComputers(data.data.data);
+      }
+    } catch (error) {
+      console.error("Error applying filters:", error);
+      // Fallback to client-side filtering if API fails
+      filterLocally();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Client-side filtering fallback
+  const filterLocally = () => {
+    let result = [...computers];
+
+    // Filter by status
+    if (filters.system_status) {
+      result = result.filter(
+        (computer) => computer.system_status === filters.system_status
+      );
+    }
+
+    // Filter by location (partial match)
+    if (filters.location) {
+      result = result.filter((computer) =>
+        computer.location.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+
+    // Search across multiple fields
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      result = result.filter(
+        (computer) =>
+          computer.os.toLowerCase().includes(searchTerm) ||
+          computer.processor.toLowerCase().includes(searchTerm) ||
+          computer.asset_tag.toLowerCase().includes(searchTerm) ||
+          computer.location.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    setFilteredComputers(result);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+      page: 1, // Reset to first page when filters change
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      system_status: "",
+      location: "",
+      search: "",
+      page: 1,
+      per_page: 15,
+    });
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -70,7 +168,8 @@ const AdminComputers = () => {
         // Close modal after a brief delay
         setTimeout(() => {
           setShowAddModal(false);
-          // In a real app, you might want to refresh the computers list here
+          // Refresh filters to include the new computer
+          applyFilters();
         }, 1500);
       }
     } catch (error) {
@@ -89,36 +188,165 @@ const AdminComputers = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Manage Computers</h2>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-green-600 py-2 px-4 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 mr-2"
-            viewBox="0 0 20 20"
-            fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          Add New
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="bg-gray-200 py-2 px-4 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Filters
+          </button>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-green-600 py-2 px-4 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Add New
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {computers.map((pc) => (
-          <div
-            key={pc.id}
-            onClick={() => {
-              navigate(`/computer/${pc.id}`);
-            }}
-            className="hover:scale-105 transition-transform cursor-pointer">
-            <PcComponent key={pc.id} pc={pc} />
+      {/* Filters Panel */}
+      {showFilters && (
+        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Filter Computers</h3>
+            <button
+              onClick={clearFilters}
+              className="text-sm text-blue-600 hover:text-blue-800">
+              Clear All
+            </button>
           </div>
-        ))}
-      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
+              <select
+                name="system_status"
+                value={filters.system_status}
+                onChange={handleFilterChange}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">All Statuses</option>
+                <option value="available">Available</option>
+                <option value="under_maintenance">Under Maintenance</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Location
+              </label>
+              <input
+                type="text"
+                name="location"
+                value={filters.location}
+                onChange={handleFilterChange}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Filter by location"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Search
+              </label>
+              <input
+                type="text"
+                name="search"
+                value={filters.search}
+                onChange={handleFilterChange}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Search OS, processor, asset tag, location"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-between items-center">
+            <div className="text-sm text-gray-500">
+              Showing {filteredComputers.length} computers
+            </div>
+
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-700">Items per page:</label>
+              <select
+                name="per_page"
+                value={filters.per_page}
+                onChange={handleFilterChange}
+                className="p-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <>
+          {filteredComputers.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-16 w-16 mx-auto text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <h3 className="mt-4 text-lg font-medium text-gray-900">
+                No computers found
+              </h3>
+              <p className="mt-1 text-gray-500">
+                Try adjusting your filters or add a new computer.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {filteredComputers.map((pc) => (
+                <div
+                  key={pc.id}
+                  onClick={() => {
+                    navigate(`/computer/${pc.id}`);
+                  }}
+                  className="hover:scale-105 transition-transform cursor-pointer">
+                  <PcComponent key={pc.id} pc={pc} />
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Add Computer Modal */}
       {showAddModal && (
@@ -292,7 +520,7 @@ const AdminComputers = () => {
                     required
                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="available">Available</option>
-                    <option value="unavailable">Unavailable</option>
+                    <option value="under_maintenance">Under Maintenance</option>
                   </select>
                 </div>
               </div>
