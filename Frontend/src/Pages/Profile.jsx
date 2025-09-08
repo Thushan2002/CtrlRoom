@@ -12,7 +12,10 @@ const Profile = () => {
     location: user?.location || "",
     bio: user?.bio || "",
   });
-  const [profileImage, setProfileImage] = useState(user?.profileImage || null);
+  const [profileImage, setProfileImage] = useState(
+    user?.profile_picture || null
+  );
+  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleInputChange = (e) => {
@@ -26,6 +29,8 @@ const Profile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setSelectedFile(file);
+
       const reader = new FileReader();
       reader.onload = (e) => {
         setProfileImage(e.target.result);
@@ -36,20 +41,37 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
+      setSubmitting(true);
       const token = localStorage.getItem("auth_token");
-      const payload = { ...formData };
-      if (profileImage && profileImage !== user?.profileImage) {
-        payload.profileImage = profileImage;
+
+      // Create FormData object for file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("phone", formData.phone || "");
+      formDataToSend.append("location", formData.location || "");
+      formDataToSend.append("bio", formData.bio || "");
+
+      // Append the file if selected
+      if (selectedFile) {
+        formDataToSend.append("profile_picture", selectedFile);
       }
-      await API.put("/user/profile", payload, {
+
+      await API.put("/user/profile", formDataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
       });
+
       if (fetchCurrentUser) await fetchCurrentUser();
       setIsEditing(false);
+      setSelectedFile(null);
     } catch (err) {
       alert("Failed to update profile.");
+      console.error(err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -81,12 +103,28 @@ const Profile = () => {
       location: user?.location || "",
       bio: user?.bio || "",
     });
-    setProfileImage(user?.profileImage || null);
+    setProfileImage(user?.profile_picture || null);
+    setSelectedFile(null);
     setIsEditing(false);
   };
 
   const triggerFileInput = () => {
     fileInputRef.current.click();
+  };
+
+  // Function to get the full URL for the profile picture
+  const getProfileImageUrl = () => {
+    if (profileImage) {
+      // If it's a data URL (newly selected image)
+      if (profileImage.startsWith("data:")) {
+        return profileImage;
+      }
+      // If it's a stored image path
+      return `${
+        process.env.REACT_APP_API_URL || "http://localhost:8000"
+      }/storage/profile_pictures/${profileImage}`;
+    }
+    return null;
   };
 
   return (
@@ -110,20 +148,10 @@ const Profile = () => {
                 Cancel
               </button>
               <button
-                onClick={async () => {
-                  setSubmitting(true);
-                  try {
-                    await handleSave();
-                  } catch (err) {
-                    const msg = err?.response?.data?.message || "Update failed";
-                    alert(msg);
-                  } finally {
-                    setSubmitting(false);
-                  }
-                }}
+                onClick={handleSave}
                 disabled={submitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                {submitting ? "Updating..." : "Save Chnages"}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+                {submitting ? "Updating..." : "Save Changes"}
               </button>
             </>
           )}
@@ -140,9 +168,9 @@ const Profile = () => {
         <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-slate-100 mb-6">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden">
-              {profileImage ? (
+              {getProfileImageUrl() ? (
                 <img
-                  src={profileImage}
+                  src={getProfileImageUrl()}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
