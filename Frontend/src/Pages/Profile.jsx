@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 
 const Profile = () => {
@@ -42,7 +42,6 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       setSubmitting(true);
-      const token = localStorage.getItem("auth_token");
 
       // Create FormData object for file upload
       const formDataToSend = new FormData();
@@ -57,12 +56,14 @@ const Profile = () => {
         formDataToSend.append("profile_picture", selectedFile);
       }
 
-      await API.put("/user/profile", formDataToSend, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      // Use POST with method override to ensure FormData is parsed correctly
+      formDataToSend.append("_method", "PUT");
+      const { data } = await API.post("/user/profile", formDataToSend);
+
+      // Optimistically update local state from response
+      if (data?.user) {
+        setProfileImage(data.user.profile_picture || null);
+      }
 
       if (fetchCurrentUser) await fetchCurrentUser();
       setIsEditing(false);
@@ -112,19 +113,37 @@ const Profile = () => {
     fileInputRef.current.click();
   };
 
+  // Keep local form and image in sync when the user object changes (e.g., after save or reload)
+  useEffect(() => {
+    setFormData({
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      location: user?.location || "",
+      bio: user?.bio || "",
+    });
+    setProfileImage(user?.profile_picture || null);
+  }, [user]);
+
   // Function to get the full URL for the profile picture
   const getProfileImageUrl = () => {
-    if (profileImage) {
-      // If it's a data URL (newly selected image)
-      if (profileImage.startsWith("data:")) {
-        return profileImage;
-      }
-      // If it's a stored image path
-      return `${
-        process.env.REACT_APP_API_URL || "http://localhost:8000"
-      }/storage/profile_pictures/${profileImage}`;
+    if (!profileImage) return null;
+
+    if (typeof profileImage === "string" && profileImage.startsWith("data:")) {
+      return profileImage;
     }
-    return null;
+
+    const apiBase = (API && API.defaults && API.defaults.baseURL) || "http://127.0.0.1:8000/api";
+    let origin;
+    try {
+      origin = new URL(apiBase).origin;
+    } catch (_) {
+      origin = "http://127.0.0.1:8000";
+    }
+
+    const filename = typeof profileImage === "string" ? profileImage : "";
+    if (!filename) return null;
+    return `${origin}/storage/profile_pictures/${filename}`;
   };
 
   return (
