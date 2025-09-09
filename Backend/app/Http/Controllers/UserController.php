@@ -12,6 +12,11 @@ class UserController extends Controller
     // Update user profile
    public function updateProfile(Request $request)
 {
+    \Log::info('updateProfile called', [
+        'user_id' => optional(Auth::user())->id,
+        'payload_keys' => array_keys($request->all()),
+        'has_file' => $request->hasFile('profile_picture'),
+    ]);
     $user = Auth::user();
 
     $validated = $request->validate([
@@ -36,13 +41,26 @@ class UserController extends Controller
         $validated['profile_picture'] = $imageName;
     }
 
-    $user->update($validated);
+    // Persist changes
+    $user->fill($validated);
+    $user->save();
+
+    // Reload fresh values and append accessors
+    $user = $user->fresh();
+    if (method_exists($user, 'append')) {
+        $user->append(['profile_picture_url']);
+    }
+
+    \Log::info('updateProfile saved', [
+        'user_id' => $user->id,
+        'updated' => $validated,
+    ]);
 
     return response()->json([
-        'message' => 'Profile updated successfully', 
+        'message' => 'Profile updated successfully',
         'user' => $user,
-        'profile_picture_url' => $user->profile_picture_url
-    ]);
+        'profile_picture_url' => $user->profile_picture_url,
+    ], 200);
 }
 
     // Delete user account
