@@ -94,11 +94,11 @@ function Login() {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <a
-                href="#"
+              <Link
+                to="/forgot-password"
                 className="text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200">
                 Forgot Password?
-              </a>
+              </Link>
             </div>
 
             {error && (

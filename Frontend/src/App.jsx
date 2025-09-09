@@ -6,6 +6,8 @@ import Dashboard from "./Pages/Dashboard";
 import Footer from "./Components/Footer";
 import SignUp from "./Pages/SignUp";
 import Login from "./Pages/Login";
+import ForgotPassword from "./Pages/ForgotPassword";
+import ResetPassword from "./Pages/ResetPassword";
 import Profile from "./Pages/Profile";
 import Computer from "./Pages/Computer";
 
@@ -26,6 +28,8 @@ const App = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/computer/:pcId" element={<Computer />} />
           <Route path="/profile" element={<Profile />} />
