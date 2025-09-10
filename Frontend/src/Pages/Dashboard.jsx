@@ -1,22 +1,23 @@
-import React, { useState } from "react";
-import PcComponent from "../Components/pcComponent";
+import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import Profile from "./Profile";
 import Computers from "./Computers";
 
-const computers = Array.from({ length: 36 }, (_, i) => {
-  const num = (i + 1).toString().padStart(3, "0");
-  const id = `PC-${num}`;
-  const status = i % 9 === 0 ? "Unavailable" : "Available";
-  return { id, status };
-});
-
 const Dashboard = () => {
-  const [activeSection, setActiveSection] = useState("dashboard");
-  const { user, role, logout } = useApp();
+  const { logout } = useApp();
+
+  const [activeSection, setActiveSection] = useState(() => {
+    return localStorage.getItem("activeSection") || "dashboard";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("activeSection", activeSection);
+  }, [activeSection]);
 
   const handleLogout = async () => {
     await logout();
+    localStorage.removeItem("activeSection"); // optional reset
+    setActiveSection("dashboard");
   };
 
   const menuItems = [
@@ -35,7 +36,7 @@ const Dashboard = () => {
 
   return (
     <div className="pb-10 flex my-10 gap-6">
-      {/* Inline Sidebar */}
+      {/* Sidebar */}
       <aside className="w-56 shrink-0 h-full bg-white rounded-xl shadow-sm p-3">
         <div className="px-2 py-3">
           <div className="text-lg font-semibold text-slate-800">CtrlRoom</div>

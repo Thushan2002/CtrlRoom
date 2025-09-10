@@ -8,8 +8,14 @@ const AdminComputers = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filteredComputers, setFilteredComputers] = useState(computers);
+  const [filteredComputers, setFilteredComputers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 0,
+  });
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -36,7 +42,7 @@ const AdminComputers = () => {
   // Apply filters whenever filters state changes
   useEffect(() => {
     applyFilters();
-  }, [filters, computers]);
+  }, [filters]);
 
   const applyFilters = async () => {
     setIsLoading(true);
@@ -56,6 +62,12 @@ const AdminComputers = () => {
 
       if (data.success) {
         setFilteredComputers(data.data.data);
+        setPagination({
+          current_page: data.data.current_page,
+          last_page: data.data.last_page,
+          per_page: data.data.per_page,
+          total: data.data.total,
+        });
       }
     } catch (error) {
       console.error("Error applying filters:", error);
@@ -67,36 +79,53 @@ const AdminComputers = () => {
   };
 
   // Client-side filtering fallback
-  const filterLocally = () => {
-    let result = [...computers];
+  const filterLocally = async () => {
+    try {
+      // If API filtering fails, get all computers and filter locally
+      const { data } = await API.get("/computers?per_page=1000"); // Get all computers
+      if (data.success) {
+        let result = [...data.data.data];
 
-    // Filter by status
-    if (filters.system_status) {
-      result = result.filter(
-        (computer) => computer.system_status === filters.system_status
-      );
+        // Filter by status
+        if (filters.system_status) {
+          result = result.filter(
+            (computer) => computer.system_status === filters.system_status
+          );
+        }
+
+        // Filter by location (partial match)
+        if (filters.location) {
+          result = result.filter((computer) =>
+            computer.location
+              .toLowerCase()
+              .includes(filters.location.toLowerCase())
+          );
+        }
+
+        // Search across multiple fields
+        if (filters.search) {
+          const searchTerm = filters.search.toLowerCase();
+          result = result.filter(
+            (computer) =>
+              computer.os.toLowerCase().includes(searchTerm) ||
+              computer.processor.toLowerCase().includes(searchTerm) ||
+              computer.asset_tag.toLowerCase().includes(searchTerm) ||
+              computer.location.toLowerCase().includes(searchTerm)
+          );
+        }
+
+        setFilteredComputers(result);
+        setPagination({
+          current_page: 1,
+          last_page: 1,
+          per_page: result.length,
+          total: result.length,
+        });
+      }
+    } catch (error) {
+      console.error("Error in local filtering:", error);
+      setFilteredComputers([]);
     }
-
-    // Filter by location (partial match)
-    if (filters.location) {
-      result = result.filter((computer) =>
-        computer.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
-
-    // Search across multiple fields
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      result = result.filter(
-        (computer) =>
-          computer.os.toLowerCase().includes(searchTerm) ||
-          computer.processor.toLowerCase().includes(searchTerm) ||
-          computer.asset_tag.toLowerCase().includes(searchTerm) ||
-          computer.location.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    setFilteredComputers(result);
   };
 
   const handleFilterChange = (e) => {
@@ -283,7 +312,7 @@ const AdminComputers = () => {
 
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-gray-500">
-              Showing {filteredComputers.length} computers
+              Showing {filteredComputers.length} of {pagination.total} computers
             </div>
 
             <div className="flex items-center gap-2">
@@ -346,6 +375,56 @@ const AdminComputers = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* Pagination */}
+      {pagination.last_page > 1 && (
+        <div className="flex justify-center items-center space-x-1 mt-6">
+          <button
+            onClick={() => {
+              const newFilters = {
+                ...filters,
+                page: pagination.current_page - 1,
+              };
+              setFilters(newFilters);
+            }}
+            disabled={pagination.current_page === 1}
+            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Previous
+          </button>
+
+          {Array.from({ length: Math.min(5, pagination.last_page) }, (_, i) => {
+            const pageNum = i + 1;
+            return (
+              <button
+                key={pageNum}
+                onClick={() => {
+                  const newFilters = { ...filters, page: pageNum };
+                  setFilters(newFilters);
+                }}
+                className={`px-3 py-2 text-sm font-medium border-t border-b ${
+                  pageNum === pagination.current_page
+                    ? "text-indigo-600 bg-indigo-50 border-indigo-500"
+                    : "text-gray-500 bg-white border-gray-300 hover:bg-gray-50"
+                }`}>
+                {pageNum}
+              </button>
+            );
+          })}
+
+          <button
+            onClick={() => {
+              const newFilters = {
+                ...filters,
+                page: pagination.current_page + 1,
+              };
+              setFilters(newFilters);
+            }}
+            disabled={pagination.current_page === pagination.last_page}
+            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            Next
+          </button>
+        </div>
       )}
 
       {/* Add Computer Modal */}

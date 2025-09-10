@@ -1,12 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useApp } from "../../context/AppContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faChevronDown,
+  faChevronRight,
+  faCheck,
+  faTimes,
+  faDesktop,
+  faExclamationTriangle,
+  faCheckCircle,
+} from "@fortawesome/free-solid-svg-icons";
 
 const AdminComplaints = () => {
   const { API } = useApp();
-  const [complaints, setComplaints] = useState([]);
-  const [filteredComplaints, setFilteredComplaints] = useState([]);
+  const [computersWithComplaints, setComputersWithComplaints] = useState([]);
+  const [filteredComputers, setFilteredComputers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedComputers, setExpandedComputers] = useState(new Set());
   const [filters, setFilters] = useState({
     status: "all", // all, resolved, unresolved
     search: "",
@@ -17,10 +28,10 @@ const AdminComplaints = () => {
     fetchComplaints();
   }, []);
 
-  // Apply filters when complaints or filters change
+  // Apply filters when computersWithComplaints or filters change
   useEffect(() => {
     applyFilters();
-  }, [complaints, filters]);
+  }, [computersWithComplaints, filters]);
 
   // Check for expired resolved complaints (older than 3 days)
   useEffect(() => {
@@ -28,14 +39,19 @@ const AdminComplaints = () => {
       const threeDaysAgo = new Date();
       threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-      setComplaints((prev) =>
-        prev.filter((complaint) => {
-          if (complaint.status === "resolved" && complaint.resolvedAt) {
-            const resolvedDate = new Date(complaint.resolvedAt);
-            return resolvedDate > threeDaysAgo;
-          }
-          return true;
-        })
+      setComputersWithComplaints((prev) =>
+        prev
+          .map((computer) => ({
+            ...computer,
+            complaints: computer.complaints.filter((complaint) => {
+              if (complaint.status === "resolved" && complaint.resolvedAt) {
+                const resolvedDate = new Date(complaint.resolvedAt);
+                return resolvedDate > threeDaysAgo;
+              }
+              return true;
+            }),
+          }))
+          .filter((computer) => computer.complaints.length > 0)
       );
     };
 
@@ -49,34 +65,33 @@ const AdminComplaints = () => {
     setError(null);
 
     try {
-      // get all computers
-      const { data } = await API.get("/computers");
+      // Get all computers with a high per_page limit to get all data
+      const { data } = await API.get("/computers?per_page=1000");
 
       if (data.success) {
-        // Filter computers that have complaints and flatten the complaints array
-        const computersWithComplaints = data.data.data.filter(
-          (computer) => computer.complaints && computer.complaints.length > 0
-        );
+        // Filter computers that have complaints and group them
+        const computersWithComplaints = data.data.data
+          .filter(
+            (computer) => computer.complaints && computer.complaints.length > 0
+          )
+          .map((computer) => ({
+            id: computer.id,
+            asset_tag: computer.asset_tag,
+            location: computer.location,
+            system_status: computer.system_status,
+            system_info: computer.system_info,
+            complaints: computer.complaints.map((complaint, index) => ({
+              id: `${computer.id}-${index}-${complaint}`,
+              text: complaint,
+              status: "unresolved", // Default status
+              createdAt: computer.updated_at || computer.created_at,
+              resolvedAt: null,
+            })),
+            totalComplaints: computer.complaints.length,
+            unresolvedComplaints: computer.complaints.length,
+          }));
 
-        // Create an array of complaints with computer info
-        const allComplaints = computersWithComplaints.flatMap((computer) =>
-          computer.complaints.map((complaint, index) => ({
-            id: `${computer.id}-${index}-${complaint}`,
-            complaint,
-            computerId: computer.id,
-            computer: {
-              asset_tag: computer.asset_tag,
-              location: computer.location,
-              system_status: computer.system_status,
-              system_info: computer.system_info,
-            },
-            status: "unresolved", // Default status
-            createdAt: computer.updated_at || computer.created_at,
-            resolvedAt: null,
-          }))
-        );
-
-        setComplaints(allComplaints);
+        setComputersWithComplaints(computersWithComplaints);
       }
     } catch (error) {
       console.error("Error fetching complaints:", error);
@@ -87,29 +102,37 @@ const AdminComplaints = () => {
   };
 
   const applyFilters = () => {
-    let result = [...complaints];
-
-    // Filter by status
-    if (filters.status !== "all") {
-      result = result.filter((complaint) =>
-        filters.status === "resolved"
-          ? complaint.status === "resolved"
-          : complaint.status === "unresolved"
-      );
-    }
+    let result = [...computersWithComplaints];
 
     // Filter by search term
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       result = result.filter(
-        (complaint) =>
-          complaint.complaint.toLowerCase().includes(searchTerm) ||
-          complaint.computer.asset_tag.toLowerCase().includes(searchTerm) ||
-          complaint.computer.location.toLowerCase().includes(searchTerm)
+        (computer) =>
+          computer.asset_tag.toLowerCase().includes(searchTerm) ||
+          computer.location.toLowerCase().includes(searchTerm) ||
+          computer.complaints.some((complaint) =>
+            complaint.text.toLowerCase().includes(searchTerm)
+          )
       );
     }
 
-    setFilteredComplaints(result);
+    // Filter by status - show computers that have complaints matching the status
+    if (filters.status !== "all") {
+      result = result.filter((computer) => {
+        if (filters.status === "resolved") {
+          return computer.complaints.some(
+            (complaint) => complaint.status === "resolved"
+          );
+        } else {
+          return computer.complaints.some(
+            (complaint) => complaint.status === "unresolved"
+          );
+        }
+      });
+    }
+
+    setFilteredComputers(result);
   };
 
   const handleFilterChange = (e) => {
@@ -120,50 +143,72 @@ const AdminComplaints = () => {
     }));
   };
 
-  const handleStatusChange = async (complaintId, newStatus) => {
+  const toggleComputerExpansion = (computerId) => {
+    const newExpanded = new Set(expandedComputers);
+    if (newExpanded.has(computerId)) {
+      newExpanded.delete(computerId);
+    } else {
+      newExpanded.add(computerId);
+    }
+    setExpandedComputers(newExpanded);
+  };
+
+  const handleComplaintStatusChange = async (
+    computerId,
+    complaintId,
+    newStatus
+  ) => {
     try {
-      // Find the complaint to get computer ID and complaint text
-      const complaint = complaints.find((c) => c.id === complaintId);
+      // Find the computer and complaint
+      const computer = computersWithComplaints.find((c) => c.id === computerId);
+      const complaint = computer?.complaints.find((c) => c.id === complaintId);
       if (!complaint) return;
 
       if (newStatus === "resolved") {
         // Remove the complaint from the computer's complaints array via API
-        await removeComplaintFromComputer(
-          complaint.computerId,
-          complaint.complaint
-        );
+        await removeComplaintFromComputer(computerId, complaint.text);
 
         // Update the complaint status locally with resolved timestamp
-        setComplaints((prev) =>
-          prev.map((c) =>
-            c.id === complaintId
+        setComputersWithComplaints((prev) =>
+          prev.map((comp) =>
+            comp.id === computerId
               ? {
-                  ...c,
-                  status: "resolved",
-                  resolvedAt: new Date().toISOString(),
+                  ...comp,
+                  complaints: comp.complaints.map((c) =>
+                    c.id === complaintId
+                      ? {
+                          ...c,
+                          status: "resolved",
+                          resolvedAt: new Date().toISOString(),
+                        }
+                      : c
+                  ),
                 }
-              : c
+              : comp
           )
         );
       } else {
         // Reopen complaint - add it back to the computer's complaints array
-        await addComplaintToComputer(complaint.computerId, complaint.complaint);
+        await addComplaintToComputer(computerId, complaint.text);
 
         // Update the complaint status locally
-        setComplaints((prev) =>
-          prev.map((c) =>
-            c.id === complaintId
-              ? { ...c, status: "unresolved", resolvedAt: null }
-              : c
+        setComputersWithComplaints((prev) =>
+          prev.map((comp) =>
+            comp.id === computerId
+              ? {
+                  ...comp,
+                  complaints: comp.complaints.map((c) =>
+                    c.id === complaintId
+                      ? { ...c, status: "unresolved", resolvedAt: null }
+                      : c
+                  ),
+                }
+              : comp
           )
         );
       }
     } catch (error) {
       console.error("Error updating complaint status:", error);
-      // Revert the change if it fails
-      setComplaints((prev) =>
-        prev.map((c) => (c.id === complaintId ? { ...c, status: c.status } : c))
-      );
     }
   };
 
@@ -218,22 +263,28 @@ const AdminComplaints = () => {
 
   const resolveAllComplaintsForComputer = async (computerId) => {
     try {
-      // Get all complaints for this computer
-      const computerComplaints = complaints.filter(
-        (c) => c.computerId === computerId && c.status === "unresolved"
-      );
-
       // Remove all complaints from the computer via API
       await API.patch(`/computers/${computerId}/complaints`, {
         complaints: [],
       });
 
       // Update all complaints for this computer to resolved status
-      setComplaints((prev) =>
-        prev.map((c) =>
-          c.computerId === computerId && c.status === "unresolved"
-            ? { ...c, status: "resolved", resolvedAt: new Date().toISOString() }
-            : c
+      setComputersWithComplaints((prev) =>
+        prev.map((comp) =>
+          comp.id === computerId
+            ? {
+                ...comp,
+                complaints: comp.complaints.map((c) =>
+                  c.status === "unresolved"
+                    ? {
+                        ...c,
+                        status: "resolved",
+                        resolvedAt: new Date().toISOString(),
+                      }
+                    : c
+                ),
+              }
+            : comp
         )
       );
     } catch (error) {
@@ -340,8 +391,8 @@ const AdminComplaints = () => {
 
           <div className="flex items-end">
             <span className="text-sm text-gray-500">
-              Showing {filteredComplaints.length} of {complaints.length}{" "}
-              complaints
+              Showing {filteredComputers.length} of{" "}
+              {computersWithComplaints.length} computers with complaints
             </span>
           </div>
         </div>
@@ -351,146 +402,213 @@ const AdminComplaints = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="text-2xl font-bold text-blue-600">
-            {complaints.length}
+            {computersWithComplaints.reduce(
+              (total, computer) => total + computer.complaints.length,
+              0
+            )}
           </div>
           <div className="text-sm text-gray-600">Total Complaints</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="text-2xl font-bold text-green-600">
-            {complaints.filter((c) => c.status === "resolved").length}
+            {computersWithComplaints.reduce(
+              (total, computer) =>
+                total +
+                computer.complaints.filter((c) => c.status === "resolved")
+                  .length,
+              0
+            )}
           </div>
           <div className="text-sm text-gray-600">Resolved</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="text-2xl font-bold text-orange-600">
-            {complaints.filter((c) => c.status === "unresolved").length}
+            {computersWithComplaints.reduce(
+              (total, computer) =>
+                total +
+                computer.complaints.filter((c) => c.status === "unresolved")
+                  .length,
+              0
+            )}
           </div>
           <div className="text-sm text-gray-600">Unresolved</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="text-2xl font-bold text-gray-600">
-            {new Set(complaints.map((c) => c.computerId)).size}
+            {computersWithComplaints.length}
           </div>
           <div className="text-sm text-gray-600">Affected Computers</div>
         </div>
       </div>
 
-      {/* Complaints List */}
-      {filteredComplaints.length === 0 ? (
+      {/* Computers with Complaints List */}
+      {filteredComputers.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-8 text-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
+          <FontAwesomeIcon
+            icon={faDesktop}
             className="h-16 w-16 mx-auto text-gray-400 mb-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
+          />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No complaints found
+            No computers with complaints found
           </h3>
           <p className="text-gray-500">
-            {complaints.length === 0
+            {computersWithComplaints.length === 0
               ? "No complaints have been reported yet."
-              : "No complaints match your current filters."}
+              : "No computers match your current filters."}
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Computer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Complaint
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredComplaints.map((complaint) => (
-                <tr key={complaint.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {complaint.computer.asset_tag}
+        <div className="space-y-4">
+          {filteredComputers.map((computer) => (
+            <div
+              key={computer.id}
+              className="bg-white rounded-lg shadow overflow-hidden">
+              {/* Computer Header */}
+              <div
+                className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => toggleComputerExpansion(computer.id)}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <FontAwesomeIcon
+                      icon={
+                        expandedComputers.has(computer.id)
+                          ? faChevronDown
+                          : faChevronRight
+                      }
+                      className="text-gray-400"
+                    />
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-indigo-100 p-2 rounded-lg">
+                        <FontAwesomeIcon
+                          icon={faDesktop}
+                          className="text-indigo-600"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {computer.asset_tag}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {computer.location}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {complaint.computer.location}
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900">
+                        {
+                          computer.complaints.filter(
+                            (c) => c.status === "unresolved"
+                          ).length
+                        }{" "}
+                        unresolved
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {computer.complaints.length} total complaints
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-400">
-                      ID: {complaint.computerId}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">
-                      {complaint.complaint}
-                    </div>
-                    {complaint.status === "resolved" &&
-                      complaint.resolvedAt && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Resolved:{" "}
-                          {new Date(complaint.resolvedAt).toLocaleDateString()}
-                          {getTimeRemaining(complaint.resolvedAt) && (
-                            <span className="ml-2 text-orange-600">
-                              (Auto-remove in:{" "}
-                              {getTimeRemaining(complaint.resolvedAt)})
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        resolveAllComplaintsForComputer(computer.id);
+                      }}
+                      className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                      <FontAwesomeIcon icon={faCheckCircle} className="mr-1" />
+                      Resolve All
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Complaints List (Expandable) */}
+              {expandedComputers.has(computer.id) && (
+                <div className="divide-y divide-gray-200">
+                  {computer.complaints.map((complaint) => (
+                    <div
+                      key={complaint.id}
+                      className="px-6 py-4 hover:bg-gray-50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <FontAwesomeIcon
+                              icon={faExclamationTriangle}
+                              className={`text-sm ${
+                                complaint.status === "resolved"
+                                  ? "text-green-500"
+                                  : "text-orange-500"
+                              }`}
+                            />
+                            <p className="text-sm text-gray-900">
+                              {complaint.text}
+                            </p>
+                            <span
+                              className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                complaint.status === "resolved"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-yellow-100 text-yellow-800"
+                              }`}>
+                              {complaint.status}
                             </span>
+                          </div>
+                          {complaint.status === "resolved" &&
+                            complaint.resolvedAt && (
+                              <div className="text-xs text-gray-500 ml-6">
+                                Resolved:{" "}
+                                {new Date(
+                                  complaint.resolvedAt
+                                ).toLocaleDateString()}
+                                {getTimeRemaining(complaint.resolvedAt) && (
+                                  <span className="ml-2 text-orange-600">
+                                    (Auto-remove in:{" "}
+                                    {getTimeRemaining(complaint.resolvedAt)})
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                        </div>
+                        <div className="ml-4">
+                          {complaint.status === "unresolved" ? (
+                            <button
+                              onClick={() =>
+                                handleComplaintStatusChange(
+                                  computer.id,
+                                  complaint.id,
+                                  "resolved"
+                                )
+                              }
+                              className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                              <FontAwesomeIcon
+                                icon={faCheck}
+                                className="mr-1"
+                              />
+                              Resolve
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                handleComplaintStatusChange(
+                                  computer.id,
+                                  complaint.id,
+                                  "unresolved"
+                                )
+                              }
+                              className="px-3 py-1 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition-colors">
+                              <FontAwesomeIcon
+                                icon={faTimes}
+                                className="mr-1"
+                              />
+                              Reopen
+                            </button>
                           )}
                         </div>
-                      )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                        complaint.status === "resolved"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}>
-                      {complaint.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {complaint.status === "unresolved" ? (
-                      <button
-                        onClick={() =>
-                          handleStatusChange(complaint.id, "resolved")
-                        }
-                        className="text-green-600 hover:text-green-900 mr-4">
-                        Mark Resolved
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          handleStatusChange(complaint.id, "unresolved")
-                        }
-                        className="text-yellow-600 hover:text-yellow-900 mr-4">
-                        Reopen
-                      </button>
-                    )}
-                    <button
-                      onClick={() =>
-                        resolveAllComplaintsForComputer(complaint.computerId)
-                      }
-                      className="text-blue-600 hover:text-blue-900">
-                      Resolve All for PC
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>

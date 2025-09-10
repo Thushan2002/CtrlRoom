@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ComputerController;
+use App\Http\Controllers\SoftwareController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +31,25 @@ Route::group(['prefix' => 'computers'], function () {
     
     // Statistics route
     Route::get('/statistics/overview', [ComputerController::class, 'getStatistics'])->name('computers.statistics');
+    
+    // Software management routes for computers
+    Route::group(['prefix' => '{computer}/software'], function () {
+        // Public routes (students can view)
+        Route::get('/', [SoftwareController::class, 'index'])->name('computers.software.index');
+        Route::get('/{software}', [SoftwareController::class, 'show'])->name('computers.software.show');
+        
+        // Admin-only routes (CRUD operations)
+        Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+            Route::post('/', [SoftwareController::class, 'store'])->name('computers.software.store');
+            Route::put('/{software}', [SoftwareController::class, 'update'])->name('computers.software.update');
+            Route::patch('/{software}', [SoftwareController::class, 'update'])->name('computers.software.patch');
+            Route::delete('/{software}', [SoftwareController::class, 'destroy'])->name('computers.software.destroy');
+        });
+    });
 });
+
+// Software categories route
+Route::get('/software/categories', [SoftwareController::class, 'getCategories'])->name('software.categories');
 
 /*
 |--------------------------------------------------------------------------

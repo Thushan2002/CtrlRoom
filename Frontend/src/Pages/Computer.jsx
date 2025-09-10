@@ -14,7 +14,9 @@ import {
   faTimes,
   faPaperPlane,
   faSave,
+  faDesktop,
 } from "@fortawesome/free-solid-svg-icons";
+import SoftwareManagement from "../Components/SoftwareManagement";
 
 const Computer = () => {
   const { pcId } = useParams();
@@ -29,6 +31,7 @@ const Computer = () => {
   const [submitStatus, setSubmitStatus] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
   const fetchComputer = async () => {
     try {
@@ -385,7 +388,7 @@ const Computer = () => {
                     }
                     className="text-sm border border-gray-300 rounded px-2 py-1 w-full mt-1">
                     <option value="available">Available</option>
-                    <option value="unavailable">Unvailable</option>
+                    <option value="under maintenance">Unvailable</option>
                   </select>
                 ) : (
                   <p className="text-sm">{computer.system_status}</p>
@@ -429,6 +432,53 @@ const Computer = () => {
         {/* Footer with last updated */}
         <div className="px-5 py-3 bg-gray-50 text-xs text-gray-500">
           Last updated: {new Date(computer.updated_at).toLocaleDateString()}
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="mt-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab("details")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "details"
+                  ? "border-indigo-500 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}>
+              <FontAwesomeIcon icon={faComputer} className="mr-2" />
+              Computer Details
+            </button>
+            <button
+              onClick={() => setActiveTab("software")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === "software"
+                  ? "border-indigo-500 text-indigo-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}>
+              <FontAwesomeIcon icon={faDesktop} className="mr-2" />
+              Installed Software
+            </button>
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        <div className="mt-6">
+          {activeTab === "details" && (
+            <div className="text-center py-8 text-gray-500">
+              <FontAwesomeIcon icon={faComputer} className="text-4xl mb-2" />
+              <p>Computer details are shown above</p>
+            </div>
+          )}
+
+          {activeTab === "software" && (
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Installed Software
+              </h3>
+              <SoftwareManagement computerId={computer.id} role={role} />
+            </div>
+          )}
         </div>
       </div>
 

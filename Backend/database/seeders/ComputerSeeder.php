@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Computer;
+use App\Models\Software;
 use Illuminate\Database\Seeder;
 
 class ComputerSeeder extends Seeder
@@ -30,5 +31,15 @@ class ComputerSeeder extends Seeder
         Computer::factory()
             ->count(10)
             ->create();
+
+        // Add software to some computers
+        $computers = Computer::all();
+        foreach ($computers as $computer) {
+            // Add 3-8 software items to each computer
+            $softwareCount = rand(3, 8);
+            Software::factory()
+                ->count($softwareCount)
+                ->create(['computer_id' => $computer->id]);
+        }
     }
 }

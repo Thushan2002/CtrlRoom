@@ -5,7 +5,7 @@ import { faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 const statusStyles = {
   Available: "bg-green-600 text-white border border-2 border-white",
-  Unavailable: "bg-red-600 text-white border border-2  border-white",
+  under_maintenance: "bg-red-600 text-white border border-2  border-white",
 };
 
 const PcComponent = ({ pc }) => {

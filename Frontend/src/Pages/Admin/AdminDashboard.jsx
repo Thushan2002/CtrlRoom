@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTachometerAlt,
@@ -18,7 +18,13 @@ import AdminSettings from "../../Components/Admin/AdminSettings";
 // Example component stubs
 
 const AdminDashboard = () => {
-  const [activeItem, setActiveItem] = useState("dashboard");
+  const [activeItem, setActiveItem] = useState(() => {
+    return localStorage.getItem("activeItem") || "dashboard";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("activeItem", activeItem);
+  }, [activeItem]);
 
   const menuItems = [
     {

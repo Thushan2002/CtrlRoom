@@ -105,7 +105,6 @@ export const AppProvider = ({ children }) => {
       const { data } = await API.get("/computers");
       if (data.success) {
         setComputers(data.data.data);
-        console.log("computers", data.data.data);
       }
     } catch (error) {
       console.log("Error", error.message);

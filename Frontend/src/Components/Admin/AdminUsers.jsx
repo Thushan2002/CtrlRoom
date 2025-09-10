@@ -52,12 +52,8 @@ const AdminUsers = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-64 text-gray-600">
-        <FontAwesomeIcon
-          icon={faSpinner}
-          className="animate-spin h-12 w-12 mb-2"
-        />
-        <p>Loading users...</p>
+      <div className="flex justify-center items-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }

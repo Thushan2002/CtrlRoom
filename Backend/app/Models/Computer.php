@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Computer extends Model
 {
@@ -74,6 +75,14 @@ class Computer extends Model
     public function isUnderMaintenance()
     {
         return $this->system_status === self::STATUS_UNDER_MAINTENANCE;
+    }
+
+    /**
+     * Get the software installed on this computer.
+     */
+    public function software(): HasMany
+    {
+        return $this->hasMany(Software::class);
     }
 
     /**

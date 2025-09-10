@@ -86,6 +86,8 @@ class ComputerController extends Controller
      */
     public function show(Computer $computer): JsonResponse
     {
+        $computer->load('software');
+        
         return response()->json([
             'success' => true,
             'data' => $computer,
