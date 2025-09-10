@@ -12,8 +12,6 @@ import AdminOverview from "../../Components/Admin/AdminOverview";
 import AdminComputers from "../../Components/Admin/AdminComputers";
 import AdminUsers from "../../Components/Admin/AdminUsers";
 import AdminComplaints from "../../Components/Admin/AdminComplaints";
-import AdminProfile from "../../Components/Admin/AdminProfile";
-import AdminSettings from "../../Components/Admin/AdminSettings";
 
 // Example component stubs
 
@@ -54,20 +52,6 @@ const AdminDashboard = () => {
       icon: faExclamationTriangle,
       component: <AdminComplaints />,
       description: "Handle complaints",
-    },
-    {
-      id: "profile",
-      label: "Profile",
-      icon: faUser,
-      component: <AdminProfile />,
-      description: "Admin profile settings",
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      icon: faCog,
-      component: <AdminSettings />,
-      description: "System configuration",
     },
   ];
 
