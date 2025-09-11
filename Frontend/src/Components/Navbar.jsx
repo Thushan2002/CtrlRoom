@@ -17,7 +17,7 @@ import { useApp } from "../context/AppContext.jsx";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, role, token, logout } = useApp();
+  const { user, role, token, logout, navigate } = useApp();
   const location = useLocation();
   const isAuthenticated = Boolean(token || user);
 
@@ -28,6 +28,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
+    navigate("/");
     setIsOpen(false);
   };
 

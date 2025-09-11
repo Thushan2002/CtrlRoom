@@ -63,15 +63,29 @@ const Footer = () => {
               />
               Home
             </Link>
-            <Link
-              to="/dashboard"
-              className="hover:text-blue-300 transition-colors duration-200 flex items-center">
-              <FontAwesomeIcon
-                icon={faTachometerAlt}
-                className="mt-1 mr-3 text-blue-300"
-              />
-              Dashboard
-            </Link>
+            {isAuthenticated && role === "admin" && (
+              <Link
+                to="/admin-ddashboard"
+                className="hover:text-blue-300 transition-colors duration-200 flex items-center">
+                <FontAwesomeIcon
+                  icon={faTachometerAlt}
+                  className="mt-1 mr-3 text-blue-300"
+                />
+                Admin Dashboard
+              </Link>
+            )}
+            {isAuthenticated && role === "student" && (
+              <Link
+                to="/dashboard"
+                className="hover:text-blue-300 transition-colors duration-200 flex items-center">
+                <FontAwesomeIcon
+                  icon={faTachometerAlt}
+                  className="mt-1 mr-3 text-blue-300"
+                />
+                Dashboard
+              </Link>
+            )}
+
             {role === "admin" && (
               <Link
                 to="/complaints"

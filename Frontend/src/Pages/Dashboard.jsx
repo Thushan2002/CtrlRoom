@@ -37,7 +37,7 @@ const Dashboard = () => {
   return (
     <div className="pb-10 flex my-10 gap-6">
       {/* Sidebar */}
-      <aside className="w-56 shrink-0 h-full bg-white rounded-xl shadow-sm p-3">
+      <aside className="hidden sm:block w-56 shrink-0 h-full bg-white rounded-xl shadow-sm p-3">
         <div className="px-2 py-3">
           <div className="text-lg font-semibold text-slate-800">CtrlRoom</div>
         </div>

@@ -11,8 +11,22 @@ import {
 // Placeholder images (replace with your actual image imports)
 import heroImage from "../assets/images/hero-image.png";
 import teamImage from "../assets/images/team-work.png";
+import { useApp } from "../context/AppContext";
 
 const HomePage = () => {
+  const { user, role, navigate } = useApp();
+
+  const navigateUser = () => {
+    if (user) {
+      if (role === "student") {
+        navigate("/dashboard");
+      } else {
+        navigate("/admin-dashboard");
+      }
+    } else {
+      navigate("/login");
+    }
+  };
   return (
     <div>
       {/* Hero Section */}
@@ -30,7 +44,9 @@ const HomePage = () => {
               Revolutionizing Computer Lab Management with real-time monitoring.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-              <button className="px-8 py-3 bg-gradient-to-r from-background-dark to-primary-3 text-white rounded-lg hover:bg-primary-3 transition-all transform hover:scale-105 shadow-lg">
+              <button
+                onClick={() => navigateUser()}
+                className="px-8 py-3 bg-gradient-to-r from-background-dark to-primary-3 text-white rounded-lg hover:bg-primary-3 transition-all transform hover:scale-105 shadow-lg cursor-pointer">
                 Get Started{" "}
                 <FontAwesomeIcon icon={faChevronRight} className="ml-2" />
               </button>
