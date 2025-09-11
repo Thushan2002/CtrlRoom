@@ -21,7 +21,7 @@ const HomePage = () => {
       if (role === "student") {
         navigate("/dashboard");
       } else {
-        navigate("/admin-dashboard");
+        navigate("/admin");
       }
     } else {
       navigate("/login");

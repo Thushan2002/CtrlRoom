@@ -63,19 +63,19 @@ const AdminOverview = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-3 md:p-6 bg-gray-50 min-h-screen">
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
         <button
           onClick={fetchStats}
-          className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+          className="flex items-center justify-center md:justify-between px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
           <FontAwesomeIcon icon={faRefresh} className="mr-2" />
-          Refresh Data
+          <span className="hidden md:block">Refresh Data</span>
         </button>
       </div>
 
       {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-3 md:gap-6 mb-8">
         {/* Total Computers Card */}
         <div className="bg-white rounded-xl shadow-md p-5 flex flex-col">
           <div className="flex items-center justify-between mb-4">
@@ -175,7 +175,7 @@ const AdminOverview = () => {
           </div>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-bold text-gray-800">
-              {stats.availability_percentage}%
+              {String(stats.availability_percentage).slice(0, 4)}%
             </p>
             <div className="text-xs font-medium px-2 py-1 rounded-full bg-indigo-100 text-indigo-800">
               Operational

@@ -9,6 +9,8 @@ import {
   faDesktop,
   faExclamationTriangle,
   faCheckCircle,
+  faChevronLeft,
+  faChevronRight as faChevronRightIcon,
 } from "@fortawesome/free-solid-svg-icons";
 
 const AdminComplaints = () => {
@@ -22,6 +24,9 @@ const AdminComplaints = () => {
     status: "all", // all, resolved, unresolved
     search: "",
   });
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5);
 
   // Fetch all computers with complaints
   useEffect(() => {
@@ -31,6 +36,7 @@ const AdminComplaints = () => {
   // Apply filters when computersWithComplaints or filters change
   useEffect(() => {
     applyFilters();
+    setCurrentPage(1); // Reset to first page when filters change
   }, [computersWithComplaints, filters]);
 
   // Check for expired resolved complaints (older than 3 days)
@@ -312,6 +318,18 @@ const AdminComplaints = () => {
     return `${days}d ${remainingHours}h`;
   };
 
+  // Get current computers for pagination
+  const indexOfLastComputer = currentPage * itemsPerPage;
+  const indexOfFirstComputer = indexOfLastComputer - itemsPerPage;
+  const currentComputers = filteredComputers.slice(
+    indexOfFirstComputer,
+    indexOfLastComputer
+  );
+  const totalPages = Math.ceil(filteredComputers.length / itemsPerPage);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-64">
@@ -458,157 +476,205 @@ const AdminComplaints = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredComputers.map((computer) => (
-            <div
-              key={computer.id}
-              className="bg-white rounded-lg shadow overflow-hidden">
-              {/* Computer Header */}
+        <div>
+          <div className="space-y-4 mb-6">
+            {currentComputers.map((computer) => (
               <div
-                className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
-                onClick={() => toggleComputerExpansion(computer.id)}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <FontAwesomeIcon
-                      icon={
-                        expandedComputers.has(computer.id)
-                          ? faChevronDown
-                          : faChevronRight
-                      }
-                      className="text-gray-400"
-                    />
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-indigo-100 p-2 rounded-lg">
+                key={computer.id}
+                className="bg-white rounded-lg shadow overflow-hidden">
+                {/* Computer Header */}
+                <div
+                  className="px-6 py-4 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => toggleComputerExpansion(computer.id)}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <FontAwesomeIcon
+                        icon={
+                          expandedComputers.has(computer.id)
+                            ? faChevronDown
+                            : faChevronRight
+                        }
+                        className="text-gray-400"
+                      />
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-indigo-100 p-2 rounded-lg">
+                          <FontAwesomeIcon
+                            icon={faDesktop}
+                            className="text-indigo-600"
+                          />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {computer.asset_tag}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {computer.location}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-gray-900">
+                          {
+                            computer.complaints.filter(
+                              (c) => c.status === "unresolved"
+                            ).length
+                          }{" "}
+                          unresolved
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {computer.complaints.length} total complaints
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          resolveAllComplaintsForComputer(computer.id);
+                        }}
+                        className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
                         <FontAwesomeIcon
-                          icon={faDesktop}
-                          className="text-indigo-600"
+                          icon={faCheckCircle}
+                          className="mr-1"
                         />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {computer.asset_tag}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {computer.location}
-                        </p>
-                      </div>
+                        Resolve All
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-gray-900">
-                        {
-                          computer.complaints.filter(
-                            (c) => c.status === "unresolved"
-                          ).length
-                        }{" "}
-                        unresolved
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {computer.complaints.length} total complaints
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        resolveAllComplaintsForComputer(computer.id);
-                      }}
-                      className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
-                      <FontAwesomeIcon icon={faCheckCircle} className="mr-1" />
-                      Resolve All
-                    </button>
                   </div>
                 </div>
+
+                {/* Complaints List (Expandable) */}
+                {expandedComputers.has(computer.id) && (
+                  <div className="divide-y divide-gray-200">
+                    {computer.complaints.map((complaint) => (
+                      <div
+                        key={complaint.id}
+                        className="px-6 py-4 hover:bg-gray-50">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <FontAwesomeIcon
+                                icon={faExclamationTriangle}
+                                className={`text-sm ${
+                                  complaint.status === "resolved"
+                                    ? "text-green-500"
+                                    : "text-orange-500"
+                                }`}
+                              />
+                              <p className="text-sm text-gray-900">
+                                {complaint.text}
+                              </p>
+                              <span
+                                className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                  complaint.status === "resolved"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }`}>
+                                {complaint.status}
+                              </span>
+                            </div>
+                            {complaint.status === "resolved" &&
+                              complaint.resolvedAt && (
+                                <div className="text-xs text-gray-500 ml-6">
+                                  Resolved:{" "}
+                                  {new Date(
+                                    complaint.resolvedAt
+                                  ).toLocaleDateString()}
+                                  {getTimeRemaining(complaint.resolvedAt) && (
+                                    <span className="ml-2 text-orange-600">
+                                      (Auto-remove in:{" "}
+                                      {getTimeRemaining(complaint.resolvedAt)})
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                          </div>
+                          <div className="ml-4">
+                            {complaint.status === "unresolved" ? (
+                              <button
+                                onClick={() =>
+                                  handleComplaintStatusChange(
+                                    computer.id,
+                                    complaint.id,
+                                    "resolved"
+                                  )
+                                }
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                                <FontAwesomeIcon
+                                  icon={faCheck}
+                                  className="mr-1"
+                                />
+                                Resolve
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  handleComplaintStatusChange(
+                                    computer.id,
+                                    complaint.id,
+                                    "unresolved"
+                                  )
+                                }
+                                className="px-3 py-1 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition-colors">
+                                <FontAwesomeIcon
+                                  icon={faTimes}
+                                  className="mr-1"
+                                />
+                                Reopen
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center mt-6">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Previous
+              </button>
+
+              <div className="flex items-center mx-4">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => paginate(page)}
+                      className={`px-3 py-2 text-sm font-medium border-t border-b ${
+                        currentPage === page
+                          ? "text-indigo-600 bg-indigo-50 border-indigo-500"
+                          : "text-gray-500 bg-white border-gray-300 hover:bg-gray-50"
+                      }`}>
+                      {page}
+                    </button>
+                  )
+                )}
               </div>
 
-              {/* Complaints List (Expandable) */}
-              {expandedComputers.has(computer.id) && (
-                <div className="divide-y divide-gray-200">
-                  {computer.complaints.map((complaint) => (
-                    <div
-                      key={complaint.id}
-                      className="px-6 py-4 hover:bg-gray-50">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <FontAwesomeIcon
-                              icon={faExclamationTriangle}
-                              className={`text-sm ${
-                                complaint.status === "resolved"
-                                  ? "text-green-500"
-                                  : "text-orange-500"
-                              }`}
-                            />
-                            <p className="text-sm text-gray-900">
-                              {complaint.text}
-                            </p>
-                            <span
-                              className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                complaint.status === "resolved"
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}>
-                              {complaint.status}
-                            </span>
-                          </div>
-                          {complaint.status === "resolved" &&
-                            complaint.resolvedAt && (
-                              <div className="text-xs text-gray-500 ml-6">
-                                Resolved:{" "}
-                                {new Date(
-                                  complaint.resolvedAt
-                                ).toLocaleDateString()}
-                                {getTimeRemaining(complaint.resolvedAt) && (
-                                  <span className="ml-2 text-orange-600">
-                                    (Auto-remove in:{" "}
-                                    {getTimeRemaining(complaint.resolvedAt)})
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                        </div>
-                        <div className="ml-4">
-                          {complaint.status === "unresolved" ? (
-                            <button
-                              onClick={() =>
-                                handleComplaintStatusChange(
-                                  computer.id,
-                                  complaint.id,
-                                  "resolved"
-                                )
-                              }
-                              className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
-                              <FontAwesomeIcon
-                                icon={faCheck}
-                                className="mr-1"
-                              />
-                              Resolve
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                handleComplaintStatusChange(
-                                  computer.id,
-                                  complaint.id,
-                                  "unresolved"
-                                )
-                              }
-                              className="px-3 py-1 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition-colors">
-                              <FontAwesomeIcon
-                                icon={faTimes}
-                                className="mr-1"
-                              />
-                              Reopen
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next
+              </button>
             </div>
-          ))}
+          )}
+
+          {/* Page Info */}
+          <div className="text-center text-sm text-gray-500 mt-2">
+            Showing {indexOfFirstComputer + 1} to{" "}
+            {Math.min(indexOfLastComputer, filteredComputers.length)} of{" "}
+            {filteredComputers.length} computers
+          </div>
         </div>
       )}
     </div>

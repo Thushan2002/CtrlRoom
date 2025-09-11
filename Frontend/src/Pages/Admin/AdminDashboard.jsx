@@ -13,8 +13,6 @@ import AdminComputers from "../../Components/Admin/AdminComputers";
 import AdminUsers from "../../Components/Admin/AdminUsers";
 import AdminComplaints from "../../Components/Admin/AdminComplaints";
 
-// Example component stubs
-
 const AdminDashboard = () => {
   const [activeItem, setActiveItem] = useState(() => {
     return localStorage.getItem("activeItem") || "dashboard";
@@ -61,8 +59,8 @@ const AdminDashboard = () => {
   return (
     <div className="flex h-full py-4">
       {/* Sidebar */}
-      <aside className="w-64  bg-white shadow-lg border-r border-gray-200 z-40 rounded-xl">
-        <nav className="p-4">
+      <aside className="w-16 sm:w-64 bg-white shadow-lg border-r border-gray-200 z-40 rounded-xl">
+        <nav className="p-2 sm:p-4">
           <ul className="space-y-2">
             {menuItems.map((item) => {
               const isActive = activeItem === item.id;
@@ -72,7 +70,8 @@ const AdminDashboard = () => {
                   <button
                     onClick={() => setActiveItem(item.id)}
                     className={`
-                      flex items-center space-x-3 px-4 py-3 rounded-lg w-full text-left transition-colors duration-200
+                      flex items-center justify-center sm:justify-start space-x-0 sm:space-x-3 
+                      px-3 sm:px-4 py-3 rounded-lg w-full text-left transition-colors duration-200
                       ${
                         isActive
                           ? "bg-blue-400 text-white shadow-md"
@@ -86,7 +85,7 @@ const AdminDashboard = () => {
                         isActive ? "text-white" : "text-gray-500"
                       }`}
                     />
-                    <div className="flex-1">
+                    <div className="hidden sm:block flex-1">
                       <span className="font-medium">{item.label}</span>
                       {isActive && (
                         <p className="text-xs text-blue-100 mt-1">
@@ -103,7 +102,7 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-6 bg-gray-50 overflow-y-auto">
+      <main className="flex-1 p-2 md:p-6 bg-gray-50 overflow-y-auto">
         {currentComponent}
       </main>
     </div>

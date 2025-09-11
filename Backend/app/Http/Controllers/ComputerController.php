@@ -15,39 +15,45 @@ class ComputerController extends Controller
      * @param Request $request
      * @return JsonResponse
      */
-    public function index(Request $request): JsonResponse
-    {
-        $query = Computer::query();
+   public function index(Request $request): JsonResponse
+{
+    $query = Computer::query();
 
-        // Filter by system status
-        if ($request->has('system_status')) {
-            $query->where('system_status', $request->system_status);
-        }
-
-        // Filter by location
-        if ($request->has('location')) {
-            $query->where('location', 'like', '%' . $request->location . '%');
-        }
-
-        // Search in OS, processor, or asset tag
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('os', 'like', '%' . $search . '%')
-                  ->orWhere('processor', 'like', '%' . $search . '%')
-                  ->orWhere('asset_tag', 'like', '%' . $search . '%')
-                  ->orWhere('location', 'like', '%' . $search . '%');
-            });
-        }
-
-        $computers = $query->orderBy('created_at', 'desc')->paginate(15);
-
-        return response()->json([
-            'success' => true,
-            'data' => $computers,
-        ]);
+    // Filter by system status
+    if ($request->has('system_status')) {
+        $query->where('system_status', $request->system_status);
     }
 
+    // Filter by location
+    if ($request->has('location')) {
+        $query->where('location', 'like', '%' . $request->location . '%');
+    }
+
+    // Search in OS, processor, or asset tag
+    if ($request->has('search')) {
+        $search = $request->search;
+        $query->where(function ($q) use ($search) {
+            $q->where('os', 'like', '%' . $search . '%')
+              ->orWhere('processor', 'like', '%' . $search . '%')
+              ->orWhere('asset_tag', 'like', '%' . $search . '%')
+              ->orWhere('location', 'like', '%' . $search . '%');
+        });
+    }
+
+    // Get per_page from request or use default (15) and cast to integer
+    $perPage = (int) $request->get('per_page', 15);
+    
+    // Validate per_page to prevent excessively large numbers
+    $perPage = min($perPage, 100); // Maximum 100 items per page
+    $perPage = max($perPage, 1);   // Minimum 1 item per page
+
+    $computers = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+    return response()->json([
+        'success' => true,
+        'data' => $computers,
+    ]);
+}
     /**
      * Store a newly created computer in storage.
      *

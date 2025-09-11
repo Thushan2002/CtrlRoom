@@ -15,6 +15,8 @@ const AdminComputers = () => {
     last_page: 1,
     per_page: 15,
     total: 0,
+    from: 0,
+    to: 0,
   });
 
   // Filter states
@@ -67,6 +69,8 @@ const AdminComputers = () => {
           last_page: data.data.last_page,
           per_page: data.data.per_page,
           total: data.data.total,
+          from: data.data.from,
+          to: data.data.to,
         });
       }
     } catch (error) {
@@ -312,7 +316,8 @@ const AdminComputers = () => {
 
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-gray-500">
-              Showing {filteredComputers.length} of {pagination.total} computers
+              Showing {pagination.from} to {pagination.to} of {pagination.total}{" "}
+              computers
             </div>
 
             <div className="flex items-center gap-2">
@@ -361,7 +366,7 @@ const AdminComputers = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2  md:grid-cols-3 lg:grid-cols-5  gap-4">
               {filteredComputers.map((pc) => (
                 <div
                   key={pc.id}
@@ -426,6 +431,11 @@ const AdminComputers = () => {
           </button>
         </div>
       )}
+      {/* Page Info */}
+      <div className="text-center text-sm text-gray-500 mt-2">
+        Showing {pagination.from} to {pagination.to} of {pagination.total}{" "}
+        computers
+      </div>
 
       {/* Add Computer Modal */}
       {showAddModal && (

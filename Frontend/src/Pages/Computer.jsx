@@ -15,6 +15,9 @@ import {
   faPaperPlane,
   faSave,
   faDesktop,
+  faArrowRight,
+  faArrowLeft,
+  faChevronLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import SoftwareManagement from "../Components/SoftwareManagement";
 
@@ -22,7 +25,7 @@ const Computer = () => {
   const { pcId } = useParams();
   const [computer, setComputer] = useState({});
   const [editedComputer, setEditedComputer] = useState({});
-  const { API, role } = useApp();
+  const { API, role, navigate } = useApp();
   const [isHovered, setIsHovered] = useState(false);
   const [showComplaintModal, setShowComplaintModal] = useState(false);
   const [complaintText, setComplaintText] = useState("");
@@ -160,11 +163,22 @@ const Computer = () => {
         </div>
       )}
 
+      {/* back to previous page */}
+      <button
+        onClick={() => navigate(-1)}
+        className="my-5 flex text-gray-600 hover:scale-[95%] cursor-pointer justify-between items-center gap-2">
+        <FontAwesomeIcon
+          className="font-thin opacity-50"
+          icon={faChevronLeft}
+        />
+        Back
+      </button>
       <div
         className="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}>
         {/* Header with ID and status */}
+
         <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center">
             <FontAwesomeIcon

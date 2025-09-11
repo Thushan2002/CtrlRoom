@@ -65,7 +65,7 @@ const Footer = () => {
             </Link>
             {isAuthenticated && role === "admin" && (
               <Link
-                to="/admin-ddashboard"
+                to="/admin"
                 className="hover:text-blue-300 transition-colors duration-200 flex items-center">
                 <FontAwesomeIcon
                   icon={faTachometerAlt}
